@@ -44,7 +44,7 @@
         pname = name;
         version = v;
         src = gitignore.lib.gitignoreSource ./.;
-        vendorHash = "sha256-CvgdOrLtEoaiLNHALhE5/nF7BcFnLE6zhtycc3SJfwQ=";
+        vendorHash = "sha256-gDk56lw+XBvjmnGvpF0jJwAltfKPsEDaajdleK/HYUc=";
         subPackages = [ "cmd/${name}" ];
         ldflags = [
           "-s"
