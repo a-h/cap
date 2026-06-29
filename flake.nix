@@ -62,6 +62,7 @@
         pkgs.git
         pkgs.go
         pkgs.goreleaser
+        pkgs.govulncheck
         pkgs.version
         pkgs.xc
       ];

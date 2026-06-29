@@ -205,6 +205,14 @@ go test ./... -coverprofile=coverage.out
 go fmt ./...
 ```
 
+### vulncheck
+
+Report known vulnerabilities in the dependencies and in the code that calls them.
+
+```bash
+govulncheck ./...
+```
+
 ### adr
 
 Create an architectural decision record.
