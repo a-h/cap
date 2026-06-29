@@ -22,7 +22,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d # v16
 
       - name: Cache Nix store
-        uses: DeterminateSystems/flakehub-cache-action@398f9fd82f5d1a0ecd48454769649cd8cae1a5b7 # v2
+        uses: DeterminateSystems/flakehub-cache-action@9926dde74484ccb2224835b80531de64ed4336ef # v3.21.2
 
       - name: Run tests
         run: nix develop --command xc test
