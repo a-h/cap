@@ -37,18 +37,19 @@
         };
       });
 
-      v = builtins.readFile ./.version;
+      v = nixpkgs.lib.strings.trim (builtins.readFile ./.version);
 
       # Build app.
       app = { name, pkgs, system, }: pkgs.buildGoModule {
         pname = name;
         version = v;
         src = gitignore.lib.gitignoreSource ./.;
-        vendorHash = null;
+        vendorHash = "sha256-CvgdOrLtEoaiLNHALhE5/nF7BcFnLE6zhtycc3SJfwQ=";
         subPackages = [ "cmd/${name}" ];
         ldflags = [
           "-s"
           "-w"
+          "-X main.Version=${v}"
         ];
         # Skip tests, we run those as part of CI.
         doCheck = false;
@@ -60,6 +61,7 @@
         pkgs.gh
         pkgs.git
         pkgs.go
+        pkgs.goreleaser
         pkgs.version
         pkgs.xc
       ];

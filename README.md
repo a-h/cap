@@ -212,3 +212,24 @@ Create an architectural decision record.
 ```bash
 adr new "Title of the decision"
 ```
+
+### release-snapshot
+
+Build release artifacts locally without publishing, to check the GoReleaser
+configuration.
+
+```bash
+goreleaser release --snapshot --clean
+```
+
+### release
+
+Bump `.version` based on the commit count, then push the matching git tag. The
+`release` GitHub Actions workflow builds and publishes the release from the tag.
+
+```bash
+version set
+git add .version
+git commit -m "chore: release $(version get)"
+version push
+```
