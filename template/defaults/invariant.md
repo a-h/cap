@@ -1,5 +1,7 @@
 # State the rule as a positive assertion of behaviour
 
+<!-- An invariant is a single rule that must always hold, stated as a positive assertion of behaviour. It states what must be true, not how it is achieved, and may constrain several capabilities. -->
+
 ## Metadata (optional)
 
 - capabilities:

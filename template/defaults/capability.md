@@ -1,5 +1,7 @@
 # Name the capability as a verb plus noun, for example "Evaluate policies"
 
+<!-- A capability is a single thing the system can do, named as a verb plus noun and described independently of any user interface, technology, or implementation. Keep it atomic: one verb on one concept, not a bundle like "Manage policies". -->
+
 ## Metadata (optional)
 
 - context:
