@@ -15,6 +15,8 @@ func buildChecklist(kind model.Kind) []string {
 			"Is the name an imperative verb plus noun, for example \"Evaluate policies\"?",
 			"Does the name complete the sentence \"the context can ___\"?",
 			"Is the name free of any user interface, technology, or implementation term?",
+			"Does this capability do exactly one thing? A name built on \"Manage\", \"Handle\", \"Process\", or \"and\" usually bundles several capabilities and should be split into one per verb, for example \"Author policies\", \"Evaluate policies\", and \"Expire policies\".",
+			"Is this capability at the right altitude: a single ability the system has, not a whole subsystem (too broad) and not one screen or endpoint (too narrow)?",
 			"Is this capability distinct from every other capability in the model, not a duplicate under another name?",
 			"Does the Description state the value or outcome delivered, not how it is implemented?",
 			"Does the Scope make the boundary clear, with both in-scope and out-of-scope content?",
@@ -66,6 +68,9 @@ func buildChecklist(kind model.Kind) []string {
 		return append([]string{
 			"Is the context a noun phrase naming a domain boundary, not a verb phrase?",
 			"Do its capabilities genuinely belong together within one bounded context?",
+			"List the concepts this context operates on, the nouns in its language, for example a policy, a decision, a request. Is each named somewhere the model can be read, rather than left implicit?",
+			"For each concept, are all the verbs the system performs on it captured as capabilities? A concept that only ever appears as the object of one capability often has authoring, evaluation, and expiry capabilities missing.",
+			"Are the capabilities here atomic, one verb on one concept, rather than a few broad capabilities like \"Manage policies\" that hide several finer-grained ones?",
 		}, common...)
 	}
 	return common
