@@ -196,6 +196,62 @@ func TestGraphWithoutAnIDGraphsTheWholeModelFromContexts(t *testing.T) {
 	}
 }
 
+func TestGraphFormatDOTEmitsADirectedGraph(t *testing.T) {
+	dir := initProject(t)
+	writeEntity(t, dir, "capabilities", "cap-0001-evaluate.md",
+		"# Evaluate policies\n\n## Description\n\nx\n\n## Scope\n\nIn scope:\n\n- x\n")
+	writeEntity(t, dir, "scenarios", "scn-0001-claim.md",
+		"# Claim approval\n\n## Description\n\nx\n\n## Steps\n\n- x\n\n## Capabilities\n\n- cap-0001\n")
+	out, err := runCLI(t, dir, "graph", "--format", "dot")
+	if err != nil {
+		t.Fatalf("graph failed: %v", err)
+	}
+	if !strings.HasPrefix(out, "digraph cap {") {
+		t.Errorf("expected a DOT digraph, got:\n%s", out)
+	}
+	if !strings.Contains(out, `"scn-0001" -> "cap-0001";`) {
+		t.Errorf("expected an edge from the scenario to its capability, got:\n%s", out)
+	}
+}
+
+func TestGraphExcludeOmitsAKind(t *testing.T) {
+	dir := initProject(t)
+	writeEntity(t, dir, "capabilities", "cap-0001-evaluate.md",
+		"# Evaluate policies\n\n## Description\n\nx\n\n## Scope\n\nIn scope:\n\n- x\n\n## Verification\n\n- tests/policy_test.go\n")
+	out, err := runCLI(t, dir, "graph", "cap-0001", "--exclude", "verification")
+	if err != nil {
+		t.Fatalf("graph failed: %v", err)
+	}
+	if strings.Contains(out, "policy_test.go") {
+		t.Errorf("expected verification to be excluded, got:\n%s", out)
+	}
+}
+
+func TestGraphDepthLimitsExpansion(t *testing.T) {
+	dir := initProject(t)
+	writeEntity(t, dir, "capabilities", "cap-0001-evaluate.md",
+		"# Evaluate policies\n\n## Description\n\nx\n\n## Scope\n\nIn scope:\n\n- x\n\n## Verification\n\n- tests/policy_test.go\n")
+	writeEntity(t, dir, "scenarios", "scn-0001-claim.md",
+		"# Claim approval\n\n## Description\n\nx\n\n## Steps\n\n- x\n\n## Capabilities\n\n- cap-0001\n")
+	out, err := runCLI(t, dir, "graph", "scn-0001", "--depth", "1")
+	if err != nil {
+		t.Fatalf("graph failed: %v", err)
+	}
+	if !strings.Contains(out, "cap-0001  Evaluate policies") {
+		t.Errorf("expected the capability at depth 1, got:\n%s", out)
+	}
+	if strings.Contains(out, "policy_test.go") {
+		t.Errorf("expected the verification, two links deep, to be trimmed, got:\n%s", out)
+	}
+}
+
+func TestGraphExcludeRejectsAnUnknownKind(t *testing.T) {
+	dir := initProject(t)
+	if _, err := runCLI(t, dir, "graph", "--exclude", "wibble"); err == nil {
+		t.Error("expected an error for an unknown kind")
+	}
+}
+
 func TestValidateWarnsAboutCapabilitiesWithoutVerification(t *testing.T) {
 	dir := initProject(t)
 	writeEntity(t, dir, "capabilities", "cap-0001-untested.md",

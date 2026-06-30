@@ -42,7 +42,10 @@ The tools report on the result:
 | `cap review <id>` | a checklist for an agent to assess an entity against the conventions |
 | `cap version` | the build version |
 
-Every report accepts `--format json`.
+Every report accepts `--format json`. `cap graph` also accepts `--format dot` for a
+Graphviz description in which each entity is drawn once however many entities link to
+it, and `--depth N` and `--exclude <kinds>` to trim the output, for example
+`cap graph --format dot --exclude verification,task | dot -Tsvg -o model.svg`.
 
 Every command reads the model from the `./cap` directory under the current working
 directory by default. Point it at a different layout with `--root <dir>`, or set the
@@ -83,8 +86,9 @@ belongs in a specification.
 A bounded context sits at the top of the hierarchy. It groups the concepts of its
 domain and the capabilities that act on them. A concept belongs to one context. A
 capability belongs to one context and links out to its invariants and verification. A
-specification describes the design of a capability, or the design of a whole context
-where the concern is cross-cutting. A scenario crosses several capabilities.
+specification describes the design of one or more capabilities, or the design of a
+whole context where the concern is cross-cutting. A scenario crosses several
+capabilities.
 
 ```text
 Bounded context ──────────────────▶ Specification   a cross-cutting design
@@ -102,8 +106,10 @@ name with the concept's identifier where it appears, for example "Policy (con-00
 so the reference can be traced.
 
 A capability and an invariant may link to each other from either file, so a single
-invariant constrains several capabilities. A specification is of a capability or of a
-whole context.
+invariant constrains several capabilities. A capability and a specification link the
+same way, so a single specification can specify several capabilities; a specification
+may instead specify a whole context. `cap validate` warns when a capability link is
+declared on only one side.
 
 ## Getting started
 
@@ -178,6 +184,7 @@ cap validate              # structure, references, and gaps (untested, undocumen
 cap validate --strict     # exit non-zero on warnings as well as errors, for CI
 cap graph                 # the whole model, from its bounded contexts down
 cap graph ctx-0001        # the context, its capabilities, and their invariants
+cap graph --format dot --exclude verification,task | dot -Tsvg -o model.svg
 ```
 
 `cap validate` reports gaps as warnings and exits zero; `--strict` makes warnings

@@ -175,7 +175,7 @@ func TestParents(t *testing.T) {
 
 func TestBuildTree(t *testing.T) {
 	t.Run("the tree follows links downward from the root", func(t *testing.T) {
-		tree := BuildTree(sample(), "scn-0001")
+		tree := BuildTree(sample(), "scn-0001", Options{})
 		if tree.ID != "scn-0001" || len(tree.Children) != 1 {
 			t.Fatalf("unexpected root: %#v", tree)
 		}
@@ -188,7 +188,7 @@ func TestBuildTree(t *testing.T) {
 	t.Run("an unresolved reference is marked rather than expanded", func(t *testing.T) {
 		m := model.NewModel()
 		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "J", Capabilities: []model.ID{"cap-9999"}}
-		tree := BuildTree(m, "scn-0001")
+		tree := BuildTree(m, "scn-0001", Options{})
 		if len(tree.Children) != 1 || tree.Children[0].Resolved {
 			t.Errorf("expected an unresolved child, got %#v", tree.Children)
 		}
@@ -202,7 +202,7 @@ func TestBuildTree(t *testing.T) {
 		// children, so instead verify a shared node on a self-referential context.
 		m.Contexts["ctx-0001"] = model.Context{ID: "ctx-0001", Name: "Context"}
 		m.Capabilities["cap-0002"] = model.Capability{ID: "cap-0002", Name: "B", Context: "ctx-0001"}
-		tree := BuildTree(m, "ctx-0001")
+		tree := BuildTree(m, "ctx-0001", Options{})
 		if tree.Render() == "" {
 			t.Errorf("expected a rendered tree")
 		}
@@ -262,14 +262,14 @@ func TestBuildForest(t *testing.T) {
 		m := model.NewModel()
 		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval"}
 		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Evaluate policies", Scenarios: []model.ID{"scn-0001"}}
-		roots := BuildForest(m)
+		roots := BuildForest(m, Options{})
 		if !hasRoot(roots, "scn-0001") {
 			t.Errorf("expected scn-0001 as a top-level root, got %v", roots)
 		}
 	})
 
 	t.Run("a scenario declared from the scenario side appears as a top-level root", func(t *testing.T) {
-		roots := BuildForest(sample())
+		roots := BuildForest(sample(), Options{})
 		if !hasRoot(roots, "scn-0001") {
 			t.Errorf("expected scn-0001 as a top-level root, got %v", roots)
 		}
@@ -278,7 +278,7 @@ func TestBuildForest(t *testing.T) {
 
 func TestNodeRender(t *testing.T) {
 	t.Run("the rendered tree indents children beneath the root", func(t *testing.T) {
-		out := BuildTree(sample(), "scn-0001").Render()
+		out := BuildTree(sample(), "scn-0001", Options{}).Render()
 		if !strings.Contains(out, "scn-0001  Claim approval") {
 			t.Errorf("expected the root line, got:\n%s", out)
 		}

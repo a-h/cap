@@ -153,9 +153,11 @@ func (cmd *ShowCmd) Run(out io.Writer) error {
 }
 
 type GraphCmd struct {
-	ID     string `arg:"" optional:"" help:"Entity identifier to root the tree at, for example scn-0001; graphs the whole model from its bounded contexts when omitted"`
-	Root   string `help:"Path to the system model root directory" default:"cap" env:"CAP_ROOT"`
-	Format string `help:"Output format" default:"text" enum:"text,json"`
+	ID      string   `arg:"" optional:"" help:"Entity identifier to root the tree at, for example scn-0001; graphs the whole model from its bounded contexts when omitted"`
+	Root    string   `help:"Path to the system model root directory" default:"cap" env:"CAP_ROOT"`
+	Format  string   `help:"Output format" default:"text" enum:"text,json,dot"`
+	Depth   int      `help:"Limit how many links from each root to expand; 0 means unlimited"`
+	Exclude []string `help:"Entity kinds to omit, for example verification,task"`
 }
 
 func (cmd *GraphCmd) Run(out io.Writer) error {
@@ -163,8 +165,16 @@ func (cmd *GraphCmd) Run(out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	opts, err := cmd.options()
+	if err != nil {
+		return err
+	}
 	if cmd.ID == "" {
-		roots := query.BuildForest(res.Model)
+		if cmd.Format == "dot" {
+			fmt.Fprint(out, query.RenderDOT(query.BuildGraph(res.Model, opts)))
+			return nil
+		}
+		roots := query.BuildForest(res.Model, opts)
 		if cmd.Format == "json" {
 			return encodeJSON(out, roots)
 		}
@@ -175,12 +185,33 @@ func (cmd *GraphCmd) Run(out io.Writer) error {
 	if _, ok := res.Model.Lookup(id); !ok {
 		return fmt.Errorf("entity %s not found", id)
 	}
-	tree := query.BuildTree(res.Model, id)
+	if cmd.Format == "dot" {
+		fmt.Fprint(out, query.RenderDOT(query.BuildGraphFrom(res.Model, id, opts)))
+		return nil
+	}
+	tree := query.BuildTree(res.Model, id, opts)
 	if cmd.Format == "json" {
 		return encodeJSON(out, tree)
 	}
 	fmt.Fprint(out, tree.Render())
 	return nil
+}
+
+// options builds the query options from the depth and exclude flags, resolving each
+// exclude value to an entity kind.
+func (cmd *GraphCmd) options() (query.Options, error) {
+	opts := query.Options{MaxDepth: cmd.Depth}
+	for _, name := range cmd.Exclude {
+		kind, err := resolveKind(name)
+		if err != nil {
+			return query.Options{}, err
+		}
+		if opts.Exclude == nil {
+			opts.Exclude = map[model.Kind]bool{}
+		}
+		opts.Exclude[kind] = true
+	}
+	return opts, nil
 }
 
 type showView struct {

@@ -20,14 +20,15 @@ type Node struct {
 	Children []Node   `json:"children,omitempty"`
 }
 
-// BuildTree builds the downward composition tree rooted at id. An identifier
-// already present on the path from the root is marked Repeated and not expanded, so
-// the tree stays finite when the graph contains cycles or shared nodes.
-func BuildTree(m *model.Model, id model.ID) Node {
-	return buildNode(m, id, map[model.ID]struct{}{})
+// BuildTree builds the downward composition tree rooted at id, applying the given
+// depth limit and kind exclusions. An identifier already present on the path from the
+// root is marked Repeated and not expanded, so the tree stays finite when the graph
+// contains cycles or shared nodes.
+func BuildTree(m *model.Model, id model.ID, opts Options) Node {
+	return buildNode(m, id, 0, opts, map[model.ID]struct{}{})
 }
 
-func buildNode(m *model.Model, id model.ID, path map[model.ID]struct{}) Node {
+func buildNode(m *model.Model, id model.ID, depth int, opts Options, path map[model.ID]struct{}) Node {
 	_, resolved := m.Lookup(id)
 	node := Node{ID: id, Title: Title(m, id), Resolved: resolved}
 	if !resolved {
@@ -37,25 +38,32 @@ func buildNode(m *model.Model, id model.ID, path map[model.ID]struct{}) Node {
 		node.Repeated = true
 		return node
 	}
+	if opts.reachedDepth(depth) {
+		return node
+	}
 	path[id] = struct{}{}
-	for _, child := range Children(m, id) {
-		node.Children = append(node.Children, buildNode(m, child, path))
+	for _, child := range opts.children(m, id) {
+		node.Children = append(node.Children, buildNode(m, child, depth+1, opts, path))
 	}
 	delete(path, id)
 	return node
 }
 
-// BuildForest builds the downward composition trees for the whole model. The
-// bounded contexts come first, each expanded into the concepts and capabilities it
-// groups, followed by the remaining top-level entities: those that nothing links to
-// and that no context already showed, such as scenarios and orphaned capabilities.
-// Roots within each group are ordered by identifier.
-func BuildForest(m *model.Model) []Node {
+// BuildForest builds the downward composition trees for the whole model, applying the
+// given depth limit and kind exclusions. The bounded contexts come first, each
+// expanded into the concepts and capabilities it groups, followed by the remaining
+// top-level entities: those that nothing links to and that no context already showed,
+// such as scenarios and orphaned capabilities. A root of an excluded kind is omitted
+// entirely. Roots within each group are ordered by identifier.
+func BuildForest(m *model.Model, opts Options) []Node {
 	covered := map[model.ID]struct{}{}
 
 	var roots []Node
 	for _, id := range sortedIDs(contextIDs(m)) {
-		node := buildNode(m, id, map[model.ID]struct{}{})
+		if opts.excluded(m, id) {
+			continue
+		}
+		node := buildNode(m, id, 0, opts, map[model.ID]struct{}{})
 		markCovered(node, covered)
 		roots = append(roots, node)
 	}
@@ -64,7 +72,10 @@ func BuildForest(m *model.Model) []Node {
 		if _, ok := covered[id]; ok {
 			continue
 		}
-		node := buildNode(m, id, map[model.ID]struct{}{})
+		if opts.excluded(m, id) {
+			continue
+		}
+		node := buildNode(m, id, 0, opts, map[model.ID]struct{}{})
 		markCovered(node, covered)
 		roots = append(roots, node)
 	}
@@ -86,6 +97,40 @@ func contextIDs(m *model.Model) []model.ID {
 	for id := range m.Contexts {
 		out = append(out, id)
 	}
+	return out
+}
+
+// allIDs returns the identifiers of every loaded entity, ordered by identifier.
+func allIDs(m *model.Model) []model.ID {
+	var out []model.ID
+	for id := range m.Contexts {
+		out = append(out, id)
+	}
+	for id := range m.Concepts {
+		out = append(out, id)
+	}
+	for id := range m.Capabilities {
+		out = append(out, id)
+	}
+	for id := range m.Invariants {
+		out = append(out, id)
+	}
+	for id := range m.Specifications {
+		out = append(out, id)
+	}
+	for id := range m.ADRs {
+		out = append(out, id)
+	}
+	for id := range m.Scenarios {
+		out = append(out, id)
+	}
+	for id := range m.Verification {
+		out = append(out, id)
+	}
+	for id := range m.Tasks {
+		out = append(out, id)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
 	return out
 }
 
