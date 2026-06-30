@@ -48,6 +48,16 @@ func TestScaffold(t *testing.T) {
 		}
 	})
 
+	t.Run("a concept uses the con prefix", func(t *testing.T) {
+		path, err := Scaffold(t.TempDir(), model.KindConcept, "Policy")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if filepath.Base(path) != "con-0001-policy.md" {
+			t.Errorf("got %q, expected con-0001-policy.md", filepath.Base(path))
+		}
+	})
+
 	t.Run("verification uses the ver prefix", func(t *testing.T) {
 		path, err := Scaffold(t.TempDir(), model.KindVerification, "Pre-release smoke test")
 		if err != nil {

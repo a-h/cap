@@ -77,6 +77,25 @@ func TestAssemble(t *testing.T) {
 			t.Errorf("expected an invariant-specific checklist, got %v", p.Checklist)
 		}
 	})
+
+	t.Run("a concept packet carries a concept checklist", func(t *testing.T) {
+		root := t.TempDir()
+		writeFile(t, root, "concepts", "con-0001-policy.md", "# Policy\n\n## Definition\n\nA named set of rules.\n")
+		res, err := store.Load(root)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		p, ok := Assemble(res, "con-0001")
+		if !ok {
+			t.Fatalf("expected the concept to be found")
+		}
+		if p.Kind != model.KindConcept {
+			t.Errorf("got kind %q, expected concept", p.Kind)
+		}
+		if !strings.Contains(strings.Join(p.Checklist, "\n"), "domain noun") {
+			t.Errorf("expected a concept-specific checklist, got %v", p.Checklist)
+		}
+	})
 }
 
 func TestAssembleAll(t *testing.T) {

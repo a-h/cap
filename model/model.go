@@ -17,6 +17,7 @@ type Kind string
 
 const (
 	KindContext       Kind = "context"
+	KindConcept       Kind = "concept"
 	KindCapability    Kind = "capability"
 	KindInvariant     Kind = "invariant"
 	KindSpecification Kind = "specification"
@@ -122,6 +123,16 @@ type Context struct {
 	Name string `json:"name"`
 }
 
+// Concept is a thing in a bounded context's ubiquitous language: a domain noun the
+// capabilities operate on, such as a policy, a decision, or a request. It records the
+// definition of that thing so the language of the context is written down rather than
+// left implicit in capability names. A concept belongs to one context.
+type Concept struct {
+	ID      ID     `json:"id"`
+	Name    string `json:"name"`
+	Context ID     `json:"context,omitempty"`
+}
+
 // Invariant is a domain invariant: a rule that must always hold. It states a
 // required property as a positive assertion of behaviour and may constrain many
 // capabilities, so the capability-to-invariant relationship is many-to-many.
@@ -207,6 +218,8 @@ func (id ID) MapToEntityKind() (kind Kind, ok bool) {
 	switch prefix {
 	case "ctx":
 		return KindContext, true
+	case "con":
+		return KindConcept, true
 	case "cap":
 		return KindCapability, true
 	case "inv":
@@ -228,6 +241,7 @@ func (id ID) MapToEntityKind() (kind Kind, ok bool) {
 // Model is the complete, loaded system model, indexed by identifier.
 type Model struct {
 	Contexts       map[ID]Context
+	Concepts       map[ID]Concept
 	Capabilities   map[ID]Capability
 	Invariants     map[ID]Invariant
 	Specifications map[ID]Specification
@@ -241,6 +255,7 @@ type Model struct {
 func NewModel() *Model {
 	return &Model{
 		Contexts:       map[ID]Context{},
+		Concepts:       map[ID]Concept{},
 		Capabilities:   map[ID]Capability{},
 		Invariants:     map[ID]Invariant{},
 		Specifications: map[ID]Specification{},
@@ -256,6 +271,9 @@ func NewModel() *Model {
 func (m *Model) Lookup(id ID) (kind Kind, ok bool) {
 	if _, ok := m.Contexts[id]; ok {
 		return KindContext, true
+	}
+	if _, ok := m.Concepts[id]; ok {
+		return KindConcept, true
 	}
 	if _, ok := m.Capabilities[id]; ok {
 		return KindCapability, true

@@ -10,6 +10,7 @@ import (
 func sample() *model.Model {
 	m := model.NewModel()
 	m.Contexts["ctx-0001"] = model.Context{ID: "ctx-0001", Name: "Policy enforcement"}
+	m.Concepts["con-0001"] = model.Concept{ID: "con-0001", Name: "Policy", Context: "ctx-0001"}
 	m.Invariants["inv-0001"] = model.Invariant{ID: "inv-0001", Title: "Policies must be evaluated consistently."}
 	m.Specifications["spec-0012"] = model.Specification{ID: "spec-0012", Title: "Policy evaluation semantics", Of: "cap-0003"}
 	m.Verification["ver-0008"] = model.Verification{ID: "ver-0008", Title: "Pre-release smoke test"}
@@ -30,6 +31,7 @@ func TestTitle(t *testing.T) {
 	}{
 		{name: "a capability uses its name", id: "cap-0003", want: "Evaluate policies"},
 		{name: "a context uses its name", id: "ctx-0001", want: "Policy enforcement"},
+		{name: "a concept uses its name", id: "con-0001", want: "Policy"},
 		{name: "an invariant uses its title", id: "inv-0001", want: "Policies must be evaluated consistently."},
 		{name: "a verification uses its title", id: "ver-0008", want: "Pre-release smoke test"},
 		{name: "an unknown identifier has no title", id: "cap-9999", want: ""},
@@ -82,10 +84,16 @@ func TestChildren(t *testing.T) {
 		}
 	})
 
-	t.Run("a context is composed of the capabilities it groups", func(t *testing.T) {
+	t.Run("a context is composed of its concepts, then the capabilities it groups", func(t *testing.T) {
 		got := Children(m, "ctx-0001")
-		if len(got) != 1 || got[0] != "cap-0003" {
-			t.Errorf("got %v, expected [cap-0003]", got)
+		if len(got) != 2 || got[0] != "con-0001" || got[1] != "cap-0003" {
+			t.Errorf("got %v, expected [con-0001 cap-0003]", got)
+		}
+	})
+
+	t.Run("a concept is a leaf in the composition direction", func(t *testing.T) {
+		if got := Children(m, "con-0001"); len(got) != 0 {
+			t.Errorf("expected a concept to have no downward children, got %v", got)
 		}
 	})
 
@@ -107,6 +115,13 @@ func TestParents(t *testing.T) {
 			if !want[id] {
 				t.Errorf("unexpected parent %s", id)
 			}
+		}
+	})
+
+	t.Run("a concept is linked by the context it belongs to", func(t *testing.T) {
+		got := Parents(sample(), "con-0001")
+		if len(got) != 1 || got[0] != "ctx-0001" {
+			t.Errorf("got %v, expected [ctx-0001]", got)
 		}
 	})
 }

@@ -15,6 +15,7 @@ import (
 // prefixForKind maps an entity kind to its canonical identifier prefix.
 var prefixForKind = map[model.Kind]string{
 	model.KindContext:       "ctx",
+	model.KindConcept:       "con",
 	model.KindCapability:    "cap",
 	model.KindInvariant:     "inv",
 	model.KindSpecification: "spec",

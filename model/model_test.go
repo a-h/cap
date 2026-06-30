@@ -28,6 +28,7 @@ func TestLookup(t *testing.T) {
 	t.Run("an entity of each kind is found by its identifier", func(t *testing.T) {
 		m := NewModel()
 		m.Contexts["ctx-0001"] = Context{ID: "ctx-0001"}
+		m.Concepts["con-0001"] = Concept{ID: "con-0001"}
 		m.Capabilities["cap-0003"] = Capability{ID: "cap-0003"}
 		m.Invariants["inv-0001"] = Invariant{ID: "inv-0001"}
 		m.Specifications["spec-0012"] = Specification{ID: "spec-0012"}
@@ -38,6 +39,7 @@ func TestLookup(t *testing.T) {
 
 		want := map[ID]Kind{
 			"ctx-0001":  KindContext,
+			"con-0001":  KindConcept,
 			"cap-0003":  KindCapability,
 			"inv-0001":  KindInvariant,
 			"spec-0012": KindSpecification,
@@ -121,6 +123,7 @@ func TestMapToEntityKind(t *testing.T) {
 		wantOK   bool
 	}{
 		{name: "a context identifier maps to the context kind", id: "ctx-0001", wantKind: KindContext, wantOK: true},
+		{name: "a concept identifier maps to the concept kind", id: "con-0001", wantKind: KindConcept, wantOK: true},
 		{name: "a capability identifier maps to the capability kind", id: "cap-0003", wantKind: KindCapability, wantOK: true},
 		{name: "an invariant identifier maps to the invariant kind", id: "inv-0001", wantKind: KindInvariant, wantOK: true},
 		{name: "a specification identifier maps to the specification kind", id: "spec-0012", wantKind: KindSpecification, wantOK: true},

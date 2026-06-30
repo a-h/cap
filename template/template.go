@@ -31,6 +31,7 @@ const optionalMarker = "(optional)"
 // fileForKind maps an entity kind to its template filename.
 var fileForKind = map[model.Kind]string{
 	model.KindContext:       "context.md",
+	model.KindConcept:       "concept.md",
 	model.KindCapability:    "capability.md",
 	model.KindInvariant:     "invariant.md",
 	model.KindSpecification: "specification.md",

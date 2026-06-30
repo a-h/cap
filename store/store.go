@@ -5,6 +5,7 @@
 //
 //	cap/
 //	├── contexts/
+//	├── concepts/
 //	├── capabilities/
 //	├── invariants/
 //	├── specifications/
@@ -46,6 +47,7 @@ const (
 // DirForKind maps an entity kind to its subdirectory beneath the system root.
 var DirForKind = map[model.Kind]string{
 	model.KindContext:       "contexts",
+	model.KindConcept:       "concepts",
 	model.KindCapability:    "capabilities",
 	model.KindInvariant:     "invariants",
 	model.KindSpecification: "specifications",

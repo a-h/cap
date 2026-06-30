@@ -17,6 +17,8 @@ func (res *LoadResult) build(kind model.Kind, id model.ID, file string, doc mark
 	switch kind {
 	case model.KindContext:
 		m.Contexts[id] = model.Context{ID: id, Name: doc.Title}
+	case model.KindConcept:
+		m.Concepts[id] = model.Concept{ID: id, Name: doc.Title, Context: parseMetaID(meta, "context")}
 	case model.KindCapability:
 		m.Capabilities[id] = res.buildCapability(id, file, doc, meta)
 	case model.KindInvariant:

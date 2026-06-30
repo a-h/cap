@@ -252,6 +252,11 @@ func collectReferences(m *model.Model) []reference {
 		add(c.ID, store.SectionVerification, model.KindVerification, c.Verification)
 		add(c.ID, store.SectionTasks, model.KindTask, c.Tasks)
 	}
+	for _, con := range m.Concepts {
+		if con.Context != "" {
+			refs = append(refs, reference{source: con.ID, section: store.SectionMetadata, target: con.Context, want: []model.Kind{model.KindContext}})
+		}
+	}
 	for _, inv := range m.Invariants {
 		add(inv.ID, store.SectionCapabilities, model.KindCapability, inv.Capabilities)
 	}

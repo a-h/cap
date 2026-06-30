@@ -61,6 +61,7 @@ func (cmd *InitCmd) Run(out io.Writer) error {
 // kind. Both the singular and plural, and a short alias, resolve to the same kind.
 var kindAliases = map[string]model.Kind{
 	"context": model.KindContext, "contexts": model.KindContext, "ctx": model.KindContext,
+	"concept": model.KindConcept, "concepts": model.KindConcept, "con": model.KindConcept,
 	"capability": model.KindCapability, "capabilities": model.KindCapability, "cap": model.KindCapability,
 	"invariant": model.KindInvariant, "invariants": model.KindInvariant, "inv": model.KindInvariant,
 	"specification": model.KindSpecification, "specifications": model.KindSpecification, "spec": model.KindSpecification,
@@ -79,7 +80,7 @@ func resolveKind(name string) (model.Kind, error) {
 }
 
 type NewCmd struct {
-	Kind string `arg:"" help:"Entity kind or alias (context/ctx, capability/cap, invariant/inv, specification/spec, adr, scenario/scn, verification/ver, task)"`
+	Kind string `arg:"" help:"Entity kind or alias (context/ctx, concept/con, capability/cap, invariant/inv, specification/spec, adr, scenario/scn, verification/ver, task)"`
 	Name string `arg:"" help:"Name of the entity, used as the title and filename slug"`
 	Root string `help:"Path to the system model root directory" default:"cap" env:"CAP_ROOT"`
 }

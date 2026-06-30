@@ -64,11 +64,20 @@ func buildChecklist(kind model.Kind) []string {
 			"Does the task clearly advance a capability?",
 			"Is the task transient, rather than describing a long-lived capability?",
 		}, common...)
+	case model.KindConcept:
+		return append([]string{
+			"Is the concept a domain noun, a thing the capabilities operate on, rather than an action or a rule?",
+			"Does the Definition state what the thing is in the language of the domain, independently of how it is stored or represented in any technology?",
+			"Does this concept belong to the context named in its Metadata, sharing that context's language?",
+			"Is this concept distinct from every other concept, not the same thing under two names?",
+			"Where this concept's name appears in another entity's text, is it tagged with this identifier, for example \"Policy (con-0001)\", so the reference can be traced?",
+		}, common...)
 	case model.KindContext:
 		return append([]string{
 			"Is the context a noun phrase naming a domain boundary, not a verb phrase?",
 			"Do its capabilities genuinely belong together within one bounded context?",
-			"List the concepts this context operates on, the nouns in its language, for example a policy, a decision, a request. Is each named somewhere the model can be read, rather than left implicit?",
+			"Is each thing this context operates on defined as a concept, rather than left implicit in capability names? The things are the nouns in its language, for example a policy, a decision, or a request.",
+			"Does a noun recur across this context's entities without a concept defining it? A term used repeatedly with no definition, such as an undefined \"world state\", is a missing concept.",
 			"For each concept, are all the verbs the system performs on it captured as capabilities? A concept that only ever appears as the object of one capability often has authoring, evaluation, and expiry capabilities missing.",
 			"Are the capabilities here atomic, one verb on one concept, rather than a few broad capabilities like \"Manage policies\" that hide several finer-grained ones?",
 		}, common...)

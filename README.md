@@ -21,6 +21,7 @@ relates to.
 ```bash
 cap init                                  # create the folder layout and templates
 cap new context "Policy enforcement"      # scaffold an entity, ready to edit
+cap new concept "Policy"                  # name a thing the context operates on
 cap new capability "Evaluate policies"
 ```
 
@@ -55,7 +56,8 @@ source against the model.
 
 | Entity | Records |
 | --- | --- |
-| Bounded context | a part of the domain, grouping related capabilities |
+| Bounded context | a part of the domain, grouping related capabilities and concepts |
+| Concept | a thing in the context's language that capabilities operate on, such as a "policy" or a "decision" |
 | Capability | an ability the system has, such as that it can "evaluate policies" |
 | Invariant | a rule that must always hold, such as "an explicit deny overrides any permit" |
 | Specification | the design of a capability or context that upholds a set of invariants |
@@ -64,8 +66,13 @@ source against the model.
 | ADR | an architectural decision that constrains how capabilities are implemented |
 | Task | a unit of work |
 
-An identifier is a lowercase prefix and a number: `ctx-0001`, `cap-0003`,
+An identifier is a lowercase prefix and a number: `ctx-0001`, `con-0001`, `cap-0003`,
 `inv-0001`, `spec-0012`, `ver-0001`, `scn-0001`, `adr-0001`, `task-0341`.
+
+A concept names a thing in the domain, a noun the capabilities act on. A capability
+names an ability, a verb on one of those things. Defining the concepts of a context
+keeps its capabilities atomic: one verb on one concept, rather than a broad
+"manage policies" that hides several.
 
 An invariant states a single rule. A specification describes the design that upholds
 a set of those rules. A rule belongs in an invariant; the design that realises it
@@ -73,13 +80,15 @@ belongs in a specification.
 
 ### Relationships
 
-A bounded context sits at the top of the hierarchy. A capability belongs to one
-context and links out to its invariants and verification. A specification describes
-the design of a capability, or the design of a whole context where the concern is
-cross-cutting. A scenario crosses several capabilities.
+A bounded context sits at the top of the hierarchy. It groups the concepts of its
+domain and the capabilities that act on them. A concept belongs to one context. A
+capability belongs to one context and links out to its invariants and verification. A
+specification describes the design of a capability, or the design of a whole context
+where the concern is cross-cutting. A scenario crosses several capabilities.
 
 ```text
 Bounded context ──────────────────▶ Specification   a cross-cutting design
+├─ Concept                           a thing in the context's language
 └─ Capability ──▶ Invariant          a rule it must uphold
               ──▶ Specification      the design of this capability
               ──▶ Verification       evidence the invariants hold
@@ -87,6 +96,10 @@ Bounded context ──────────────────▶ Specif
 
 Scenario ──▶ Capability, Capability  a workflow across capabilities
 ```
+
+A concept is referenced by name in the prose of the entities that use it. Tag the
+name with the concept's identifier where it appears, for example "Policy (con-0001)",
+so the reference can be traced.
 
 A capability and an invariant may link to each other from either file, so a single
 invariant constrains several capabilities. A specification is of a capability or of a
@@ -111,6 +124,7 @@ editable templates:
 ```text
 cap/
 ├── contexts/
+├── concepts/
 ├── capabilities/
 ├── invariants/
 ├── specifications/

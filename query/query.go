@@ -26,6 +26,9 @@ func Title(m *model.Model, id model.ID) string {
 	if c, ok := m.Contexts[id]; ok {
 		return c.Name
 	}
+	if con, ok := m.Concepts[id]; ok {
+		return con.Name
+	}
 	if c, ok := m.Capabilities[id]; ok {
 		return c.Name
 	}
@@ -58,6 +61,10 @@ func List(m *model.Model, kind model.Kind) []Entry {
 	case model.KindContext:
 		for id, c := range m.Contexts {
 			entries = append(entries, Entry{ID: id, Title: c.Name})
+		}
+	case model.KindConcept:
+		for id, con := range m.Concepts {
+			entries = append(entries, Entry{ID: id, Title: con.Name})
 		}
 	case model.KindCapability:
 		for id, c := range m.Capabilities {
@@ -95,9 +102,9 @@ func List(m *model.Model, kind model.Kind) []Entry {
 // Children returns the identifiers an entity links to, in the downward
 // composition direction: a scenario is composed of capabilities; a capability is
 // composed of its invariants, specifications, ADRs, verification, and tasks; a
-// context lists the capabilities it groups. The capability-to-invariant link may
-// be declared from either end, so a capability's children include invariants that
-// name it as well as those it names.
+// context lists the concepts it defines and the capabilities it groups. The
+// capability-to-invariant link may be declared from either end, so a capability's
+// children include invariants that name it as well as those it names.
 func Children(m *model.Model, id model.ID) []model.ID {
 	if c, ok := m.Capabilities[id]; ok {
 		out := dedupe(append(c.Invariants, getInvariantsNaming(m, id)...))
@@ -111,7 +118,7 @@ func Children(m *model.Model, id model.ID) []model.ID {
 		return append([]model.ID(nil), s.Capabilities...)
 	}
 	if _, ok := m.Contexts[id]; ok {
-		return getCapabilitiesInContext(m, id)
+		return append(getConceptsInContext(m, id), getCapabilitiesInContext(m, id)...)
 	}
 	return nil
 }
@@ -126,6 +133,11 @@ func Parents(m *model.Model, id model.ID) []model.ID {
 	if c, ok := m.Capabilities[id]; ok {
 		if c.Context != "" {
 			add(c.Context)
+		}
+	}
+	if con, ok := m.Concepts[id]; ok {
+		if con.Context != "" {
+			add(con.Context)
 		}
 	}
 	for jid, j := range m.Scenarios {
@@ -175,6 +187,19 @@ func getCapabilitiesInContext(m *model.Model, ctx model.ID) []model.ID {
 	var out []model.ID
 	for id, c := range m.Capabilities {
 		if c.Context == ctx {
+			out = append(out, id)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// getConceptsInContext returns the identifiers of concepts that declare the given
+// context, ordered by identifier.
+func getConceptsInContext(m *model.Model, ctx model.ID) []model.ID {
+	var out []model.ID
+	for id, con := range m.Concepts {
+		if con.Context == ctx {
 			out = append(out, id)
 		}
 	}

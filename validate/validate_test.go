@@ -102,6 +102,27 @@ func TestCheck(t *testing.T) {
 		}
 	})
 
+	t.Run("a concept belonging to an existing context produces no problems", func(t *testing.T) {
+		m := model.NewModel()
+		m.Contexts["ctx-0001"] = model.Context{ID: "ctx-0001", Name: "Policy enforcement"}
+		m.Concepts["con-0001"] = model.Concept{ID: "con-0001", Name: "Policy", Context: "ctx-0001"}
+		if problems := Check(m, nil); len(problems) != 0 {
+			t.Errorf("expected no problems, got %v", problems)
+		}
+	})
+
+	t.Run("a concept naming a context that does not exist is warned", func(t *testing.T) {
+		m := model.NewModel()
+		m.Concepts["con-0001"] = model.Concept{ID: "con-0001", Name: "Policy", Context: "ctx-9999"}
+		problems := Check(m, nil)
+		if len(problems) != 1 {
+			t.Fatalf("expected 1 problem, got %d: %v", len(problems), problems)
+		}
+		if !strings.Contains(problems[0].Message, "con-0001") || !strings.Contains(problems[0].Message, "ctx-9999") {
+			t.Errorf("expected the message to name the concept and the missing context, got %q", problems[0].Message)
+		}
+	})
+
 	t.Run("a capability's own inline invariant produces no problems", func(t *testing.T) {
 		m := model.NewModel()
 		m.Invariants["cap-0003/inv-1"] = model.Invariant{ID: "cap-0003/inv-1", Title: "Policies are evaluated consistently.", Owner: "cap-0003"}
