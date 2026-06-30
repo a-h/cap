@@ -37,7 +37,8 @@ func buildChecklist(kind model.Kind) []string {
 		return append([]string{
 			"Does the specification describe the design that realises the invariants: how the parts fit together, including implementation detail?",
 			"Does it explain how, rather than restating the behaviour rules, which belong in the invariants?",
-			"Does the design described match the capability or context this specification links to, rather than detailing a different one?",
+			"Does the design described match the capabilities or context this specification links to, rather than detailing a different one?",
+			"For each capability this specification names, does that capability also name this specification? A link declared on only one side is likely a half-deleted or forgotten relationship.",
 		}, common...)
 	case model.KindADR:
 		return append([]string{

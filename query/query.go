@@ -103,19 +103,22 @@ func List(m *model.Model, kind model.Kind) []Entry {
 // composition direction: a scenario is composed of capabilities; a capability is
 // composed of its invariants, specifications, ADRs, verification, and tasks; a
 // context lists the concepts it defines and the capabilities it groups. The
-// capability-to-invariant link may be declared from either end, so a capability's
-// children include invariants that name it as well as those it names.
+// capability-to-invariant, scenario-to-capability, and capability-to-specification
+// links may each be declared from either end, so a scenario's children include the
+// capabilities that name it, and a capability's children include the invariants that
+// name it and the specifications whose Specifies names it, alongside those the
+// capability names itself.
 func Children(m *model.Model, id model.ID) []model.ID {
 	if c, ok := m.Capabilities[id]; ok {
 		out := dedupe(append(c.Invariants, getInvariantsNaming(m, id)...))
-		out = append(out, c.Specifications...)
+		out = dedupe(append(append(out, c.Specifications...), getSpecificationsOf(m, id)...))
 		out = append(out, c.ADRs...)
 		out = append(out, c.Verification...)
 		out = append(out, c.Tasks...)
 		return out
 	}
 	if s, ok := m.Scenarios[id]; ok {
-		return append([]model.ID(nil), s.Capabilities...)
+		return dedupe(append(append([]model.ID(nil), s.Capabilities...), getCapabilitiesNaming(m, id)...))
 	}
 	if _, ok := m.Contexts[id]; ok {
 		return append(getConceptsInContext(m, id), getCapabilitiesInContext(m, id)...)
@@ -124,9 +127,10 @@ func Children(m *model.Model, id model.ID) []model.ID {
 }
 
 // Parents returns the identifiers that link to an entity: the context a capability
-// belongs to, the scenarios that use a capability, the capabilities an invariant
-// constrains, and the capability a specification specifies. The result is ordered
-// by identifier.
+// belongs to, the scenarios that use a capability (whether the link is declared on the
+// scenario or the capability), the capabilities an invariant constrains, and the
+// capabilities or context a specification specifies. The result is ordered by
+// identifier.
 func Parents(m *model.Model, id model.ID) []model.ID {
 	seen := map[model.ID]struct{}{}
 	add := func(p model.ID) { seen[p] = struct{}{} }
@@ -138,6 +142,11 @@ func Parents(m *model.Model, id model.ID) []model.ID {
 	if con, ok := m.Concepts[id]; ok {
 		if con.Context != "" {
 			add(con.Context)
+		}
+	}
+	if c, ok := m.Capabilities[id]; ok {
+		for _, sid := range c.Scenarios {
+			add(sid)
 		}
 	}
 	for jid, j := range m.Scenarios {
@@ -155,9 +164,9 @@ func Parents(m *model.Model, id model.ID) []model.ID {
 			add(cid)
 		}
 	}
-	for sid, s := range m.Specifications {
-		if s.Of == id {
-			add(sid)
+	if s, ok := m.Specifications[id]; ok {
+		for _, target := range s.Specifies {
+			add(target)
 		}
 	}
 	out := make([]model.ID, 0, len(seen))
@@ -174,6 +183,33 @@ func getInvariantsNaming(m *model.Model, capability model.ID) []model.ID {
 	var out []model.ID
 	for id, inv := range m.Invariants {
 		if slices.Contains(inv.Capabilities, capability) {
+			out = append(out, id)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// getSpecificationsOf returns the specifications whose Specifies names the given
+// capability, so the link is visible whether declared on the capability or the
+// specification.
+func getSpecificationsOf(m *model.Model, capability model.ID) []model.ID {
+	var out []model.ID
+	for id, s := range m.Specifications {
+		if slices.Contains(s.Specifies, capability) {
+			out = append(out, id)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// getCapabilitiesNaming returns the capabilities that name the given scenario, so the
+// many-to-many link is visible whether declared on the scenario or the capability.
+func getCapabilitiesNaming(m *model.Model, scenario model.ID) []model.ID {
+	var out []model.ID
+	for id, c := range m.Capabilities {
+		if slices.Contains(c.Scenarios, scenario) {
 			out = append(out, id)
 		}
 	}
@@ -207,10 +243,12 @@ func getConceptsInContext(m *model.Model, ctx model.ID) []model.ID {
 	return out
 }
 
-// capabilityLinksTo reports whether the capability references the given identifier in
-// any of its link sections.
+// capabilityLinksTo reports whether the capability references the given identifier as
+// one of its downward children. The scenarios a capability names are deliberately
+// excluded: a scenario sits above the capabilities it uses, so a capability naming a
+// scenario records an upward link, not a child.
 func capabilityLinksTo(c model.Capability, id model.ID) bool {
-	for _, set := range [][]model.ID{c.Invariants, c.Specifications, c.ADRs, c.Scenarios, c.Verification, c.Tasks} {
+	for _, set := range [][]model.ID{c.Invariants, c.Specifications, c.ADRs, c.Verification, c.Tasks} {
 		if slices.Contains(set, id) {
 			return true
 		}

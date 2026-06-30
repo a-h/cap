@@ -121,7 +121,7 @@ func TestLoad(t *testing.T) {
 		writeFile(t, root, "contexts", "ctx-0001-policy-enforcement.md", "# Policy enforcement\n")
 		writeFile(t, root, "capabilities", "cap-0003-evaluate-policies.md", "# Evaluate policies\n")
 		writeFile(t, root, "invariants", "inv-0001-consistency.md", "# Policies must be evaluated consistently.\n")
-		writeFile(t, root, "specifications", "spec-0012-semantics.md", "# Policy evaluation semantics\n\n## Metadata\n\n- of: cap-0003\n")
+		writeFile(t, root, "specifications", "spec-0012-semantics.md", "# Policy evaluation semantics\n\n## Specifies\n\n- cap-0003\n")
 		writeFile(t, root, "adrs", "adr-0014-engine.md", "# Policy evaluation engine\n")
 		writeFile(t, root, "scenarios", "scn-0001-claim-approval.md", "# Claim approval\n\n## Capabilities\n\n- cap-0003\n")
 		writeFile(t, root, "verification", "ver-0008-smoke.md", "# Pre-release smoke test\n\n## Description\n\nx\n\n## Paths\n\n- tests/e2e/policy.spec.ts\n")
@@ -146,7 +146,7 @@ func TestLoad(t *testing.T) {
 		if r, ok := m.Invariants["inv-0001"]; !ok || r.Title != "Policies must be evaluated consistently." {
 			t.Errorf("invariant not loaded correctly: %#v", r)
 		}
-		if s, ok := m.Specifications["spec-0012"]; !ok || s.Of != "cap-0003" {
+		if s, ok := m.Specifications["spec-0012"]; !ok || len(s.Specifies) != 1 || s.Specifies[0] != "cap-0003" {
 			t.Errorf("specification not loaded correctly: %#v", s)
 		}
 		if a, ok := m.ADRs["adr-0014"]; !ok || a.Title != "Policy evaluation engine" {

@@ -47,7 +47,7 @@ func TestFor(t *testing.T) {
 		m := newModel(t,
 			model.Context{ID: "CTX-001", Name: "Policy enforcement"},
 			model.Invariant{ID: "INV-001", Title: "Policies must be evaluated consistently."},
-			model.Specification{ID: "SPEC-012", Title: "Policy evaluation semantics", Of: "CAP-003"},
+			model.Specification{ID: "SPEC-012", Title: "Policy evaluation semantics", Specifies: []model.ID{"CAP-003"}},
 			model.Capability{
 				ID: "CAP-003", Name: "Evaluate policies", Context: "CTX-001",
 				Invariants:     []model.ID{"INV-001"},

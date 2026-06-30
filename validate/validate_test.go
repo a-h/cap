@@ -17,7 +17,7 @@ func TestCheck(t *testing.T) {
 		verID := model.SynthesiseID(id, "ver", 1)
 		m.Verification[verID] = model.Verification{ID: verID, Paths: []string{"x_test.go"}, Owner: id}
 		specID := model.SynthesiseID(id, "spec", 1)
-		m.Specifications[specID] = model.Specification{ID: specID, Title: "Design", Of: id, Owner: id}
+		m.Specifications[specID] = model.Specification{ID: specID, Title: "Design", Specifies: []model.ID{id}, Owner: id}
 		return model.Capability{ID: id, Name: name, Status: model.StatusDone, Verification: []model.ID{verID}, Specifications: []model.ID{specID}}
 	}
 
@@ -93,12 +93,123 @@ func TestCheck(t *testing.T) {
 		}
 	})
 
-	t.Run("a scenario referencing an existing capability produces no problems", func(t *testing.T) {
+	t.Run("a scenario and capability that name each other produce no problems", func(t *testing.T) {
 		m := model.NewModel()
-		m.Capabilities["cap-0003"] = coveredCapability(m, "cap-0003", "Evaluate policies")
+		c := coveredCapability(m, "cap-0003", "Evaluate policies")
+		c.Scenarios = []model.ID{"scn-0001"}
+		m.Capabilities["cap-0003"] = c
 		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval", Capabilities: []model.ID{"cap-0003"}}
 		if problems := Check(m, nil); len(problems) != 0 {
 			t.Errorf("expected no problems, got %v", problems)
+		}
+	})
+
+	t.Run("a scenario and capability that name each other from only one side warn", func(t *testing.T) {
+		m := model.NewModel()
+		m.Capabilities["cap-0003"] = coveredCapability(m, "cap-0003", "Evaluate policies")
+		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval", Capabilities: []model.ID{"cap-0003"}}
+		problems := Check(m, nil)
+		if len(problems) != 1 {
+			t.Fatalf("expected 1 problem, got %d: %v", len(problems), problems)
+		}
+		if !strings.Contains(problems[0].Message, "scn-0001") || !strings.Contains(problems[0].Message, "cap-0003") {
+			t.Errorf("expected the message to name both entities, got %q", problems[0].Message)
+		}
+	})
+
+	t.Run("a capability that names a scenario which does not name it back warns", func(t *testing.T) {
+		m := model.NewModel()
+		c := coveredCapability(m, "cap-0003", "Evaluate policies")
+		c.Scenarios = []model.ID{"scn-0001"}
+		m.Capabilities["cap-0003"] = c
+		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval"}
+		problems := Check(m, nil)
+		if len(problems) != 1 {
+			t.Fatalf("expected 1 problem, got %d: %v", len(problems), problems)
+		}
+		if !strings.Contains(problems[0].Message, "scn-0001") || !strings.Contains(problems[0].Message, "cap-0003") {
+			t.Errorf("expected the message to name both entities, got %q", problems[0].Message)
+		}
+	})
+
+	t.Run("a file-backed specification and capability that name each other produce no problems", func(t *testing.T) {
+		m := model.NewModel()
+		c := coveredCapability(m, "cap-0003", "Evaluate policies")
+		c.Specifications = append(c.Specifications, "spec-0050")
+		m.Capabilities["cap-0003"] = c
+		m.Specifications["spec-0050"] = model.Specification{ID: "spec-0050", Title: "Design", Specifies: []model.ID{"cap-0003"}}
+		if problems := Check(m, nil); len(problems) != 0 {
+			t.Errorf("expected no problems, got %v", problems)
+		}
+	})
+
+	t.Run("a file-backed specification of a capability that does not name it back warns", func(t *testing.T) {
+		m := model.NewModel()
+		m.Capabilities["cap-0003"] = coveredCapability(m, "cap-0003", "Evaluate policies")
+		m.Specifications["spec-0050"] = model.Specification{ID: "spec-0050", Title: "Design", Specifies: []model.ID{"cap-0003"}}
+		problems := Check(m, nil)
+		if len(problems) != 1 {
+			t.Fatalf("expected 1 problem, got %d: %v", len(problems), problems)
+		}
+		if !strings.Contains(problems[0].Message, "spec-0050") || !strings.Contains(problems[0].Message, "cap-0003") {
+			t.Errorf("expected the message to name both entities, got %q", problems[0].Message)
+		}
+	})
+
+	t.Run("a capability that names a file-backed specification which does not specify it back warns", func(t *testing.T) {
+		m := model.NewModel()
+		c := coveredCapability(m, "cap-0003", "Evaluate policies")
+		c.Specifications = append(c.Specifications, "spec-0050")
+		m.Capabilities["cap-0003"] = c
+		m.Specifications["spec-0050"] = model.Specification{ID: "spec-0050", Title: "Design"}
+		problems := Check(m, nil)
+		if len(problems) != 1 {
+			t.Fatalf("expected 1 problem, got %d: %v", len(problems), problems)
+		}
+		if !strings.Contains(problems[0].Message, "spec-0050") || !strings.Contains(problems[0].Message, "cap-0003") {
+			t.Errorf("expected the message to name both entities, got %q", problems[0].Message)
+		}
+	})
+
+	t.Run("a specification shared across several capabilities is clean when each names it back", func(t *testing.T) {
+		m := model.NewModel()
+		a := coveredCapability(m, "cap-0001", "Publish events")
+		a.Specifications = append(a.Specifications, "spec-0050")
+		m.Capabilities["cap-0001"] = a
+		b := coveredCapability(m, "cap-0003", "Subscribe to event streams")
+		b.Specifications = append(b.Specifications, "spec-0050")
+		m.Capabilities["cap-0003"] = b
+		m.Specifications["spec-0050"] = model.Specification{ID: "spec-0050", Title: "WebSocket protocol", Specifies: []model.ID{"cap-0001", "cap-0003"}}
+		if problems := Check(m, nil); len(problems) != 0 {
+			t.Errorf("expected no problems for a shared, mutually-declared specification, got %v", problems)
+		}
+	})
+
+	t.Run("a specification shared across capabilities warns for the capability that does not name it back", func(t *testing.T) {
+		m := model.NewModel()
+		a := coveredCapability(m, "cap-0001", "Publish events")
+		a.Specifications = append(a.Specifications, "spec-0050")
+		m.Capabilities["cap-0001"] = a
+		m.Capabilities["cap-0003"] = coveredCapability(m, "cap-0003", "Subscribe to event streams")
+		m.Specifications["spec-0050"] = model.Specification{ID: "spec-0050", Title: "WebSocket protocol", Specifies: []model.ID{"cap-0001", "cap-0003"}}
+		problems := Check(m, nil)
+		if len(problems) != 1 {
+			t.Fatalf("expected 1 problem, got %d: %v", len(problems), problems)
+		}
+		if !strings.Contains(problems[0].Message, "spec-0050") || !strings.Contains(problems[0].Message, "cap-0003") {
+			t.Errorf("expected the message to name spec-0050 and cap-0003, got %q", problems[0].Message)
+		}
+	})
+
+	t.Run("a specification of a bounded context is not warned as asymmetric", func(t *testing.T) {
+		m := model.NewModel()
+		m.Contexts["ctx-0001"] = model.Context{ID: "ctx-0001", Name: "Policy enforcement"}
+		c := coveredCapability(m, "cap-0003", "Evaluate policies")
+		c.Context = "ctx-0001"
+		m.Capabilities["cap-0003"] = c
+		m.Specifications["spec-0050"] = model.Specification{ID: "spec-0050", Title: "Context design", Specifies: []model.ID{"ctx-0001"}}
+		if problems := Check(m, nil); len(problems) != 0 {
+			t.Errorf("expected no asymmetry problems for a context-level specification, got %v", problems)
 		}
 	})
 
@@ -181,7 +292,7 @@ func TestCheck(t *testing.T) {
 	t.Run("a capability documented by a context-level specification is not warned", func(t *testing.T) {
 		m := model.NewModel()
 		m.Contexts["ctx-0001"] = model.Context{ID: "ctx-0001", Name: "Policy enforcement"}
-		m.Specifications["spec-0001"] = model.Specification{ID: "spec-0001", Title: "Auditing design", Of: "ctx-0001"}
+		m.Specifications["spec-0001"] = model.Specification{ID: "spec-0001", Title: "Auditing design", Specifies: []model.ID{"ctx-0001"}}
 		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Evaluate policies", Context: "ctx-0001"}
 		problems := Check(m, nil)
 		if containsMessage(problems, "cap-0003 has no specification") {

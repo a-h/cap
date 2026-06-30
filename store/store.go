@@ -42,6 +42,7 @@ const (
 	SectionTasks          = "Tasks"
 	SectionCapabilities   = "Capabilities"
 	SectionPaths          = "Paths"
+	SectionSpecifies      = "Specifies"
 )
 
 // DirForKind maps an entity kind to its subdirectory beneath the system root.

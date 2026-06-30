@@ -12,7 +12,7 @@ func sample() *model.Model {
 	m.Contexts["ctx-0001"] = model.Context{ID: "ctx-0001", Name: "Policy enforcement"}
 	m.Concepts["con-0001"] = model.Concept{ID: "con-0001", Name: "Policy", Context: "ctx-0001"}
 	m.Invariants["inv-0001"] = model.Invariant{ID: "inv-0001", Title: "Policies must be evaluated consistently."}
-	m.Specifications["spec-0012"] = model.Specification{ID: "spec-0012", Title: "Policy evaluation semantics", Of: "cap-0003"}
+	m.Specifications["spec-0012"] = model.Specification{ID: "spec-0012", Title: "Policy evaluation semantics", Specifies: []model.ID{"cap-0003"}}
 	m.Verification["ver-0008"] = model.Verification{ID: "ver-0008", Title: "Pre-release smoke test"}
 	m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval", Capabilities: []model.ID{"cap-0003"}}
 	m.Capabilities["cap-0003"] = model.Capability{
@@ -84,6 +84,46 @@ func TestChildren(t *testing.T) {
 		}
 	})
 
+	t.Run("a capability's children include a specification named only from the specification side", func(t *testing.T) {
+		m := model.NewModel()
+		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Evaluate policies"}
+		m.Specifications["spec-0012"] = model.Specification{ID: "spec-0012", Title: "Design", Specifies: []model.ID{"cap-0003"}}
+		got := Children(m, "cap-0003")
+		if len(got) != 1 || got[0] != "spec-0012" {
+			t.Errorf("got %v, expected [spec-0012]", got)
+		}
+	})
+
+	t.Run("a specification shared across capabilities is a child of each", func(t *testing.T) {
+		m := model.NewModel()
+		m.Capabilities["cap-0001"] = model.Capability{ID: "cap-0001", Name: "Publish events"}
+		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Subscribe to event streams"}
+		m.Specifications["spec-0001"] = model.Specification{ID: "spec-0001", Title: "WebSocket protocol", Specifies: []model.ID{"cap-0001", "cap-0003"}}
+		if got := Children(m, "cap-0001"); len(got) != 1 || got[0] != "spec-0001" {
+			t.Errorf("Children(cap-0001) = %v, expected [spec-0001]", got)
+		}
+		if got := Children(m, "cap-0003"); len(got) != 1 || got[0] != "spec-0001" {
+			t.Errorf("Children(cap-0003) = %v, expected [spec-0001]", got)
+		}
+		got := Parents(m, "spec-0001")
+		if len(got) != 2 || got[0] != "cap-0001" || got[1] != "cap-0003" {
+			t.Errorf("Parents(spec-0001) = %v, expected [cap-0001 cap-0003]", got)
+		}
+	})
+
+	t.Run("a specification named from both ends appears once among a capability's children", func(t *testing.T) {
+		got := Children(m, "cap-0003")
+		var count int
+		for _, id := range got {
+			if id == "spec-0012" {
+				count++
+			}
+		}
+		if count != 1 {
+			t.Errorf("expected spec-0012 once, got %d occurrences in %v", count, got)
+		}
+	})
+
 	t.Run("a context is composed of its concepts, then the capabilities it groups", func(t *testing.T) {
 		got := Children(m, "ctx-0001")
 		if len(got) != 2 || got[0] != "con-0001" || got[1] != "cap-0003" {
@@ -105,9 +145,9 @@ func TestChildren(t *testing.T) {
 }
 
 func TestParents(t *testing.T) {
-	t.Run("a capability is linked by its context, the scenarios that use it, and the specs that specify it", func(t *testing.T) {
+	t.Run("a capability is linked by its context and the scenarios that use it, not by its specifications", func(t *testing.T) {
 		got := Parents(sample(), "cap-0003")
-		want := map[model.ID]bool{"ctx-0001": true, "scn-0001": true, "spec-0012": true}
+		want := map[model.ID]bool{"ctx-0001": true, "scn-0001": true}
 		if len(got) != len(want) {
 			t.Fatalf("got %v, expected %d parents", got, len(want))
 		}
@@ -115,6 +155,13 @@ func TestParents(t *testing.T) {
 			if !want[id] {
 				t.Errorf("unexpected parent %s", id)
 			}
+		}
+	})
+
+	t.Run("a specification is linked by the capability it specifies", func(t *testing.T) {
+		got := Parents(sample(), "spec-0012")
+		if len(got) != 1 || got[0] != "cap-0003" {
+			t.Errorf("got %v, expected [cap-0003]", got)
 		}
 	})
 
@@ -158,6 +205,73 @@ func TestBuildTree(t *testing.T) {
 		tree := BuildTree(m, "ctx-0001")
 		if tree.Render() == "" {
 			t.Errorf("expected a rendered tree")
+		}
+	})
+}
+
+func TestScenarioCapabilityLinkFromEitherEnd(t *testing.T) {
+	capabilitySide := func() *model.Model {
+		m := model.NewModel()
+		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval"}
+		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Evaluate policies", Scenarios: []model.ID{"scn-0001"}}
+		return m
+	}
+
+	t.Run("a capability that names a scenario does not become a parent of that scenario", func(t *testing.T) {
+		if got := Parents(capabilitySide(), "scn-0001"); len(got) != 0 {
+			t.Errorf("expected a scenario to have no parents, got %v", got)
+		}
+	})
+
+	t.Run("a scenario named only from the capability side still lists that capability as a child", func(t *testing.T) {
+		got := Children(capabilitySide(), "scn-0001")
+		if len(got) != 1 || got[0] != "cap-0003" {
+			t.Errorf("got %v, expected [cap-0003]", got)
+		}
+	})
+
+	t.Run("a capability named only from the capability side reports the scenario as a parent", func(t *testing.T) {
+		got := Parents(capabilitySide(), "cap-0003")
+		if len(got) != 1 || got[0] != "scn-0001" {
+			t.Errorf("got %v, expected [scn-0001]", got)
+		}
+	})
+
+	t.Run("a scenario linked from either end is not duplicated among a capability's parents", func(t *testing.T) {
+		m := model.NewModel()
+		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval", Capabilities: []model.ID{"cap-0003"}}
+		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Evaluate policies", Scenarios: []model.ID{"scn-0001"}}
+		got := Parents(m, "cap-0003")
+		if len(got) != 1 || got[0] != "scn-0001" {
+			t.Errorf("got %v, expected [scn-0001]", got)
+		}
+	})
+}
+
+func TestBuildForest(t *testing.T) {
+	hasRoot := func(roots []Node, id model.ID) bool {
+		for _, r := range roots {
+			if r.ID == id {
+				return true
+			}
+		}
+		return false
+	}
+
+	t.Run("a scenario named only from the capability side appears as a top-level root", func(t *testing.T) {
+		m := model.NewModel()
+		m.Scenarios["scn-0001"] = model.Scenario{ID: "scn-0001", Name: "Claim approval"}
+		m.Capabilities["cap-0003"] = model.Capability{ID: "cap-0003", Name: "Evaluate policies", Scenarios: []model.ID{"scn-0001"}}
+		roots := BuildForest(m)
+		if !hasRoot(roots, "scn-0001") {
+			t.Errorf("expected scn-0001 as a top-level root, got %v", roots)
+		}
+	})
+
+	t.Run("a scenario declared from the scenario side appears as a top-level root", func(t *testing.T) {
+		roots := BuildForest(sample())
+		if !hasRoot(roots, "scn-0001") {
+			t.Errorf("expected scn-0001 as a top-level root, got %v", roots)
 		}
 	})
 }

@@ -94,45 +94,69 @@ func Check(m *model.Model, files map[model.ID]string) []store.Problem {
 	return problems
 }
 
-// hintAsymmetricLinks warns when a file-backed invariant and a capability name each
-// other from only one side. The invariant-to-capability link may be declared from
-// either end, so the model treats a one-sided link as present; the warning catches
-// the likelier cause, a half-deleted or forgotten link, and prompts declaring it on
-// both entities so either file shows the relationship on its own. Inline invariants
-// are owned by a single capability and excluded, since they cannot be named from
-// another file.
+// hintAsymmetricLinks warns when two file-backed entities that may name each other from
+// either end declare the link from only one side. This applies to the
+// invariant-to-capability, scenario-to-capability, and specification-to-capability
+// links: the model treats a one-sided link as present, so the warning catches the
+// likelier cause, a half-deleted or forgotten link, and prompts declaring it on both
+// entities so either file shows the relationship on its own without walking the graph.
+// Inline invariants, specifications, and verification are owned by a single capability
+// and excluded, since they cannot be named from another file. A specification of a
+// bounded context is excluded, since a context has no list naming its specifications.
 func hintAsymmetricLinks(m *model.Model, files map[model.ID]string) []store.Problem {
 	var problems []store.Problem
+	warn := func(file model.ID, namer, named model.ID) {
+		problems = append(problems, store.Problem{
+			File:     files[file],
+			Severity: store.SeverityWarning,
+			Message:  fmt.Sprintf("%s names %s, but %s does not name %s; declare the link on both entities or remove it", namer, named, named, namer),
+		})
+	}
 	for _, inv := range m.Invariants {
 		if inv.Inline() {
 			continue
 		}
 		for _, cid := range inv.Capabilities {
-			c, ok := m.Capabilities[cid]
-			if !ok {
-				continue
-			}
-			if !slices.Contains(c.Invariants, inv.ID) {
-				problems = append(problems, store.Problem{
-					File:     files[inv.ID],
-					Severity: store.SeverityWarning,
-					Message:  fmt.Sprintf("%s names %s, but %s does not name %s; declare the link on both entities or remove it", inv.ID, cid, cid, inv.ID),
-				})
+			if c, ok := m.Capabilities[cid]; ok && !slices.Contains(c.Invariants, inv.ID) {
+				warn(inv.ID, inv.ID, cid)
 			}
 		}
 	}
 	for _, c := range m.Capabilities {
 		for _, iid := range c.Invariants {
-			inv, ok := m.Invariants[iid]
-			if !ok || inv.Inline() {
-				continue
+			if inv, ok := m.Invariants[iid]; ok && !inv.Inline() && !slices.Contains(inv.Capabilities, c.ID) {
+				warn(c.ID, c.ID, iid)
 			}
-			if !slices.Contains(inv.Capabilities, c.ID) {
-				problems = append(problems, store.Problem{
-					File:     files[c.ID],
-					Severity: store.SeverityWarning,
-					Message:  fmt.Sprintf("%s names %s, but %s does not name %s; declare the link on both entities or remove it", c.ID, iid, iid, c.ID),
-				})
+		}
+	}
+	for _, j := range m.Scenarios {
+		for _, cid := range j.Capabilities {
+			if c, ok := m.Capabilities[cid]; ok && !slices.Contains(c.Scenarios, j.ID) {
+				warn(j.ID, j.ID, cid)
+			}
+		}
+	}
+	for _, c := range m.Capabilities {
+		for _, sid := range c.Scenarios {
+			if j, ok := m.Scenarios[sid]; ok && !slices.Contains(j.Capabilities, c.ID) {
+				warn(c.ID, c.ID, sid)
+			}
+		}
+	}
+	for _, s := range m.Specifications {
+		if s.Inline() {
+			continue
+		}
+		for _, target := range s.Specifies {
+			if c, ok := m.Capabilities[target]; ok && !slices.Contains(c.Specifications, s.ID) {
+				warn(s.ID, s.ID, c.ID)
+			}
+		}
+	}
+	for _, c := range m.Capabilities {
+		for _, sid := range c.Specifications {
+			if s, ok := m.Specifications[sid]; ok && !s.Inline() && !slices.Contains(s.Specifies, c.ID) {
+				warn(c.ID, c.ID, sid)
 			}
 		}
 	}
@@ -146,14 +170,16 @@ func hintAsymmetricLinks(m *model.Model, files map[model.ID]string) []store.Prob
 func hintGaps(m *model.Model, files map[model.ID]string) []store.Problem {
 	documented := map[model.ID]bool{}
 	for _, s := range m.Specifications {
-		if _, ok := m.Capabilities[s.Of]; ok {
-			documented[s.Of] = true
-			continue
-		}
-		if _, ok := m.Contexts[s.Of]; ok {
-			for cid, c := range m.Capabilities {
-				if c.Context == s.Of {
-					documented[cid] = true
+		for _, target := range s.Specifies {
+			if _, ok := m.Capabilities[target]; ok {
+				documented[target] = true
+				continue
+			}
+			if _, ok := m.Contexts[target]; ok {
+				for cid, c := range m.Capabilities {
+					if c.Context == target {
+						documented[cid] = true
+					}
 				}
 			}
 		}
@@ -261,8 +287,8 @@ func collectReferences(m *model.Model) []reference {
 		add(inv.ID, store.SectionCapabilities, model.KindCapability, inv.Capabilities)
 	}
 	for _, s := range m.Specifications {
-		if s.Of != "" {
-			refs = append(refs, reference{source: s.ID, section: store.SectionMetadata, target: s.Of, want: []model.Kind{model.KindCapability, model.KindContext}})
+		for _, target := range s.Specifies {
+			refs = append(refs, reference{source: s.ID, section: store.SectionSpecifies, target: target, want: []model.Kind{model.KindCapability, model.KindContext}})
 		}
 	}
 	for _, j := range m.Scenarios {

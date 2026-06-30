@@ -24,7 +24,7 @@ func (res *LoadResult) build(kind model.Kind, id model.ID, file string, doc mark
 	case model.KindInvariant:
 		m.Invariants[id] = model.Invariant{ID: id, Title: doc.Title, Capabilities: res.parseReferences(file, doc, SectionCapabilities)}
 	case model.KindSpecification:
-		m.Specifications[id] = model.Specification{ID: id, Title: doc.Title, Of: parseMetaID(meta, "of")}
+		m.Specifications[id] = model.Specification{ID: id, Title: doc.Title, Specifies: res.parseReferences(file, doc, SectionSpecifies)}
 	case model.KindADR:
 		m.ADRs[id] = model.ADR{ID: id, Title: doc.Title}
 	case model.KindScenario:
@@ -124,7 +124,7 @@ func (res *LoadResult) parseSpecifications(owner model.ID, file string, doc mark
 	for _, sub := range doc.Subsections(SectionSpecifications) {
 		ordinal++
 		inlineID := model.SynthesiseID(owner, "spec", ordinal)
-		res.Model.Specifications[inlineID] = model.Specification{ID: inlineID, Title: sub.Title, Of: owner, Detail: getItemTexts(sub.Items), Owner: owner}
+		res.Model.Specifications[inlineID] = model.Specification{ID: inlineID, Title: sub.Title, Specifies: []model.ID{owner}, Detail: getItemTexts(sub.Items), Owner: owner}
 		ids = append(ids, inlineID)
 	}
 	return ids

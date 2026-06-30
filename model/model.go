@@ -153,18 +153,19 @@ func (i Invariant) Inline() bool { return i.Owner != "" }
 
 // Specification is the overall design that realises a set of invariants: how the
 // pieces fit together, including implementation detail. It does not restate
-// behaviour, which the invariants already capture. A specification is of a
-// capability or of a bounded context (a design spanning the context's
-// capabilities), named by Of.
+// behaviour, which the invariants already capture. A specification specifies one or
+// more capabilities, or a bounded context (a design spanning the context's
+// capabilities), named by Specifies, so the capability-to-specification relationship
+// is many-to-many.
 //
 // Like an invariant, a specification is either file-backed or inline within a
 // single capability.
 type Specification struct {
-	ID     ID       `json:"id"`
-	Title  string   `json:"title"`
-	Of     ID       `json:"of,omitempty"`
-	Detail []string `json:"detail,omitempty"`
-	Owner  ID       `json:"owner,omitempty"`
+	ID        ID       `json:"id"`
+	Title     string   `json:"title"`
+	Specifies []ID     `json:"specifies,omitempty"`
+	Detail    []string `json:"detail,omitempty"`
+	Owner     ID       `json:"owner,omitempty"`
 }
 
 // Inline reports whether the specification is written within a capability rather
