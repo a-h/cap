@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -152,7 +153,7 @@ func (cmd *ShowCmd) Run(out io.Writer) error {
 }
 
 type GraphCmd struct {
-	ID     string `arg:"" help:"Entity identifier, for example scn-0001"`
+	ID     string `arg:"" optional:"" help:"Entity identifier to root the tree at, for example scn-0001; graphs the whole model from its bounded contexts when omitted"`
 	Root   string `help:"Path to the system model root directory" default:"cap" env:"CAP_ROOT"`
 	Format string `help:"Output format" default:"text" enum:"text,json"`
 }
@@ -161,6 +162,14 @@ func (cmd *GraphCmd) Run(out io.Writer) error {
 	res, err := store.Load(cmd.Root)
 	if err != nil {
 		return err
+	}
+	if cmd.ID == "" {
+		roots := query.BuildForest(res.Model)
+		if cmd.Format == "json" {
+			return encodeJSON(out, roots)
+		}
+		fmt.Fprint(out, query.RenderForest(roots))
+		return nil
 	}
 	id := model.ID(cmd.ID).Canonical()
 	if _, ok := res.Model.Lookup(id); !ok {
@@ -342,6 +351,10 @@ func run(args []string, out io.Writer) error {
 	}
 	ctx, err := parser.Parse(args)
 	if err != nil {
+		var parseErr *kong.ParseError
+		if len(args) == 0 && errors.As(err, &parseErr) {
+			return parseErr.Context.PrintUsage(false)
+		}
 		return err
 	}
 	return ctx.Run(&cli.Globals)

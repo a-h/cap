@@ -173,6 +173,29 @@ func TestGraphPrintsATopDownTree(t *testing.T) {
 	}
 }
 
+func TestGraphWithoutAnIDGraphsTheWholeModelFromContexts(t *testing.T) {
+	dir := initProject(t)
+	writeEntity(t, dir, "contexts", "ctx-0001-claims.md",
+		"# Claims\n\n## Description\n\nx\n")
+	writeEntity(t, dir, "capabilities", "cap-0001-evaluate.md",
+		"# Evaluate policies\n\n## Metadata\n\n- context: ctx-0001\n\n## Description\n\nx\n\n## Scope\n\nIn scope:\n\n- x\n")
+	writeEntity(t, dir, "scenarios", "scn-0001-claim.md",
+		"# Claim approval\n\n## Description\n\nx\n\n## Steps\n\n- x\n\n## Capabilities\n\n- cap-0001\n")
+	out, err := runCLI(t, dir, "graph")
+	if err != nil {
+		t.Fatalf("graph failed: %v", err)
+	}
+	if !strings.Contains(out, "ctx-0001  Claims") {
+		t.Errorf("expected the context to be a root, got:\n%s", out)
+	}
+	if !strings.Contains(out, "cap-0001  Evaluate policies") {
+		t.Errorf("expected the capability beneath its context, got:\n%s", out)
+	}
+	if !strings.Contains(out, "scn-0001  Claim approval") {
+		t.Errorf("expected the scenario as a top-level root, got:\n%s", out)
+	}
+}
+
 func TestValidateWarnsAboutCapabilitiesWithoutVerification(t *testing.T) {
 	dir := initProject(t)
 	writeEntity(t, dir, "capabilities", "cap-0001-untested.md",
@@ -215,6 +238,20 @@ func TestVersionWritesTheBuildVersion(t *testing.T) {
 	}
 	if buf.String() != Version {
 		t.Errorf("expected %q, got %q", Version, buf.String())
+	}
+}
+
+func TestRunWithoutArgumentsPrintsHelp(t *testing.T) {
+	var buf bytes.Buffer
+	if err := run(nil, &buf); err != nil {
+		t.Fatalf("run without arguments failed: %v", err)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "Usage: cap <command>") {
+		t.Errorf("expected usage text, got %q", out)
+	}
+	if !strings.Contains(out, "Commands:") {
+		t.Errorf("expected the command list, got %q", out)
 	}
 }
 

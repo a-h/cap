@@ -2,6 +2,7 @@ package query
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/a-h/cap/model"
@@ -42,6 +43,86 @@ func buildNode(m *model.Model, id model.ID, path map[model.ID]struct{}) Node {
 	}
 	delete(path, id)
 	return node
+}
+
+// BuildForest builds the downward composition trees for the whole model. The
+// bounded contexts come first, each expanded into the concepts and capabilities it
+// groups, followed by the remaining top-level entities: those that nothing links to
+// and that no context already showed, such as scenarios and orphaned capabilities.
+// Roots within each group are ordered by identifier.
+func BuildForest(m *model.Model) []Node {
+	covered := map[model.ID]struct{}{}
+
+	var roots []Node
+	for _, id := range sortedIDs(contextIDs(m)) {
+		node := buildNode(m, id, map[model.ID]struct{}{})
+		markCovered(node, covered)
+		roots = append(roots, node)
+	}
+
+	for _, id := range sortedIDs(topLevelIDs(m)) {
+		if _, ok := covered[id]; ok {
+			continue
+		}
+		node := buildNode(m, id, map[model.ID]struct{}{})
+		markCovered(node, covered)
+		roots = append(roots, node)
+	}
+	return roots
+}
+
+// markCovered records the identifier of a node and all of its descendants, so an
+// entity shown beneath a context or earlier root is not repeated as a top-level root.
+func markCovered(n Node, covered map[model.ID]struct{}) {
+	covered[n.ID] = struct{}{}
+	for _, child := range n.Children {
+		markCovered(child, covered)
+	}
+}
+
+// contextIDs returns the identifiers of every loaded bounded context.
+func contextIDs(m *model.Model) []model.ID {
+	out := make([]model.ID, 0, len(m.Contexts))
+	for id := range m.Contexts {
+		out = append(out, id)
+	}
+	return out
+}
+
+// topLevelIDs returns the identifiers of entities that no other entity links to and
+// so sit at the top of the composition graph, such as scenarios and capabilities
+// that declare no context.
+func topLevelIDs(m *model.Model) []model.ID {
+	var out []model.ID
+	for id := range m.Scenarios {
+		if len(Parents(m, id)) == 0 {
+			out = append(out, id)
+		}
+	}
+	for id := range m.Capabilities {
+		if len(Parents(m, id)) == 0 {
+			out = append(out, id)
+		}
+	}
+	return out
+}
+
+func sortedIDs(ids []model.ID) []model.ID {
+	sort.Slice(ids, func(i, j int) bool { return ids[i] < ids[j] })
+	return ids
+}
+
+// RenderForest produces an indented text tree for each root, separated by a blank
+// line.
+func RenderForest(roots []Node) string {
+	var b strings.Builder
+	for i, root := range roots {
+		if i > 0 {
+			b.WriteByte('\n')
+		}
+		b.WriteString(root.Render())
+	}
+	return b.String()
 }
 
 // Render produces an indented text tree for a node.
