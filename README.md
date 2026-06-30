@@ -37,7 +37,7 @@ The tools report on the result:
 | `cap validate` | structural and reference problems, and gaps such as a capability with no verification or no specification |
 | `cap list <kind>` | the entities of a kind, by identifier |
 | `cap show <id>` | one entity, what it links to, and what links to it |
-| `cap graph <id>` | the hierarchy beneath an entity (a context, its capabilities, their invariants) |
+| `cap graph [id]` | the hierarchy beneath an entity (a context, its capabilities, their invariants), or the whole model from its bounded contexts when no identifier is given |
 | `cap context <cap>` | the bundle an agent reads to generate code or tests for a capability |
 | `cap review <id>` | a checklist for an agent to assess an entity against the conventions |
 | `cap version` | the build version |
@@ -176,6 +176,7 @@ Check and explore the result:
 ```bash
 cap validate              # structure, references, and gaps (untested, undocumented)
 cap validate --strict     # exit non-zero on warnings as well as errors, for CI
+cap graph                 # the whole model, from its bounded contexts down
 cap graph ctx-0001        # the context, its capabilities, and their invariants
 ```
 
