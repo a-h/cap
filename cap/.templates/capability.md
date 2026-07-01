@@ -1,5 +1,7 @@
 # Name the capability as a verb plus noun, for example "Evaluate policies"
 
+<!-- A capability is a single thing the system can do, named as a verb plus noun and described independently of any user interface, technology, or implementation. Keep it atomic: one verb on one concept, not a bundle like "Manage policies". Name it by how the product is used, from the goal of the actor who uses it, not by the mechanism that implements it: "Provide context to an agent", not "Bundle a capability context". If the name echoes an internal type, function, or file, rename it to the use. -->
+
 ## Metadata (optional)
 
 - context:
@@ -7,8 +9,10 @@
 
 ## Description
 
-State what the capability does and the value or outcome it delivers. Describe it
-independently of any user interface, technology, or implementation.
+State what the capability does, the value or outcome it delivers, and why an actor
+reaches for it. Frame it by how the product is used, not by the mechanism that
+implements it, and describe it independently of any user interface, technology, or
+internal data structure.
 
 ## Scope
 

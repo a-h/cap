@@ -19,6 +19,8 @@ func buildChecklist(kind model.Kind) []string {
 			"Is this capability at the right altitude: a single ability the system has, not a whole subsystem (too broad) and not one screen or endpoint (too narrow)?",
 			"Is this capability distinct from every other capability in the model, not a duplicate under another name?",
 			"Does the Description state the value or outcome delivered, not how it is implemented?",
+			"Is this named and described by how the product is used, from the goal of the actor who uses it, rather than by an internal mechanism or data structure? A name like \"Bundle a capability context\" describes the plumbing that produces the output; \"Provide context to an agent\" describes what the actor gets and why. When the name echoes an internal type, function, or file, rename it to the use.",
+			"Does the Description say why an actor reaches for this capability, so a reader learns what it is for and not only what it does?",
 			"Does the Scope make the boundary clear, with both in-scope and out-of-scope content?",
 			"Will this capability survive UI redesigns, API changes, and technology migrations?",
 			"Run the tests this capability lists under Verification, then check each invariant has a test that covers it. An invariant with no covering test is a quality gap.",
@@ -71,7 +73,7 @@ func buildChecklist(kind model.Kind) []string {
 			"Does the Definition state what the thing is in the language of the domain, independently of how it is stored or represented in any technology?",
 			"Does this concept belong to the context named in its Metadata, sharing that context's language?",
 			"Is this concept distinct from every other concept, not the same thing under two names?",
-			"Where this concept's name appears in another entity's text, is it tagged with this identifier, for example \"Policy (con-0001)\", so the reference can be traced?",
+			"Where this concept's name appears in another entity's text as a reference, is it capitalised and tagged with this identifier, for example \"Policy (con-0001)\", so the reference is marked and can be traced? Use sentence case for a multi-word name, for example \"Capability bundle (con-0006)\".",
 		}, common...)
 	case model.KindContext:
 		return append([]string{
@@ -81,6 +83,7 @@ func buildChecklist(kind model.Kind) []string {
 			"Does a noun recur across this context's entities without a concept defining it? A term used repeatedly with no definition, such as an undefined \"world state\", is a missing concept.",
 			"For each concept, are all the verbs the system performs on it captured as capabilities? A concept that only ever appears as the object of one capability often has authoring, evaluation, and expiry capabilities missing.",
 			"Are the capabilities here atomic, one verb on one concept, rather than a few broad capabilities like \"Manage policies\" that hide several finer-grained ones?",
+			"Is each capability framed by how the product is used, from the goal of the actor who uses it, rather than by the mechanism that implements it? A capability named after an internal type or step, like \"Bundle a context\", should be renamed to the use it serves, like \"Provide context to an agent\".",
 		}, common...)
 	}
 	return common
