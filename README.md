@@ -144,6 +144,22 @@ cap/
 Each file is a structured Markdown document whose identifier is derived from its
 filename, for example `capabilities/cap-0003-evaluate-policies.md`.
 
+#### Architectural decision records managed by adr-tools
+
+A project that already keeps its ADRs with
+[adr-tools](https://github.com/npryce/adr-tools) records their directory in a
+`.adr-dir` config file, for example a `.adr-dir` containing `doc/adr`. When cap finds
+this config at the model root or in a parent directory, it reads ADRs from the
+directory the config names instead of the internal `adrs/` directory. Absent a
+config, a conventional `doc/adr` directory (adr-tools' default) is used when present,
+so a project that follows the convention needs no configuration.
+
+adr-tools names files with a bare, zero-padded number and a slug, for example
+`doc/adr/0001-record-architecture-decisions.md`. cap derives the identifier
+`adr-0001` from that number, so capabilities reference these ADRs the same way as any
+other, with `adr-NNNN`. Create and renumber these ADRs with adr-tools; `cap new adr`
+reports that adr-tools manages them rather than scaffolding a duplicate.
+
 Edit the capability to record which context it belongs to, the rules it upholds, and
 the design that upholds them. Invariants and specifications go inline; only an entity
 shared across capabilities needs its own file.

@@ -16,6 +16,14 @@
 //
 // Each file is a structured Markdown document whose identifier is derived from
 // its filename.
+//
+// Architectural decision records are a special case. A project that already
+// manages ADRs with adr-tools records their location in a ".adr-dir" config file.
+// When that config is found at the model root or a parent directory, ADRs are read
+// from the directory it names instead of the internal "adrs" directory. The
+// adr-tools naming convention is a bare, zero-padded number followed by a slug, for
+// example "0001-record-architecture-decisions.md"; cap synthesises the identifier
+// "adr-0001" from that number so the ADR can be referenced as usual.
 package store
 
 import (
@@ -116,7 +124,14 @@ func ParseID(path string) (id model.ID, ok bool) {
 // references; see the validate package for reference checking.
 func Load(root string) (LoadResult, error) {
 	res := LoadResult{Model: model.NewModel(), Files: map[model.ID]string{}}
+	externalADRDir, useExternalADRs := resolveADRDir(root)
 	for kind, dir := range DirForKind {
+		if kind == model.KindADR && useExternalADRs {
+			if err := res.loadExternalADRs(externalADRDir); err != nil {
+				return res, err
+			}
+			continue
+		}
 		path := filepath.Join(root, dir)
 		entries, err := os.ReadDir(path)
 		if err != nil {

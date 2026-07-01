@@ -34,6 +34,11 @@ var optionalHeading = regexp.MustCompile(`(?i)^(#+\s+.*?)\s*\(optional\)\s*$`)
 // the filename. The next free number for the kind's identifier prefix is allocated.
 // It returns the path written.
 func Scaffold(root string, kind model.Kind, name string) (path string, err error) {
+	if kind == model.KindADR {
+		if external, ok := resolveADRDir(root); ok {
+			return "", fmt.Errorf("store: ADRs are managed by adr-tools in %s; create one with 'adr new %q'", external, name)
+		}
+	}
 	dir, ok := DirForKind[kind]
 	if !ok {
 		return "", fmt.Errorf("store: no directory for kind %q", kind)
