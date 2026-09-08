@@ -1,4 +1,6 @@
 .direnv
+/cap
+/capui
 /coverage
 /coverage.html
 /coverage.out

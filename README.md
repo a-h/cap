@@ -111,6 +111,34 @@ same way, so a single specification can specify several capabilities; a specific
 may instead specify a whole context. `cap validate` warns when a capability link is
 declared on only one side.
 
+## Framework comparison
+
+cap addresses concerns that other architecture and planning frameworks also cover, in
+different forms and at different levels of detail. The table below maps cap's entities
+to the nearest equivalent in each framework; "—" means no direct equivalent.
+
+| cap             | NATO NAF v4.1              | SAFe                      | Scrum               | DDD                 |
+| --------------- | -------------------------- | ------------------------- | ------------------- | ------------------- |
+| Bounded context | Operational Node (L2)      | Value Stream / Capability | Product             | Bounded Context     |
+| Concept         | Information Item (L7)      | —                         | —                   | Ubiquitous Language |
+| Capability      | Capability (C1)            | Feature                   | Epic                | Domain Service      |
+| Invariant       | Constraint (C8 / L8)       | Acceptance Criteria       | Acceptance Criteria | Business Rule       |
+| Specification   | —                          | Architectural Runway      | —                   | —                   |
+| Scenario        | — (informal)               | Story                     | User Story          | —                   |
+| Verification    | —                          | Test Evidence             | Definition of Done  | —                   |
+| ADR             | Architecture Standard (A8) | —                         | —                   | —                   |
+| Task            | —                          | Story / Task              | Task                | —                   |
+
+**No cap equivalent:** NATO NAF's Service (S) and Physical/Resource (P) families cover
+service interfaces, systems, and deployment; NAF also carries effects (C5), performance
+criteria (C7), and capability roadmaps (Cr) that cap does not model. SAFe's Programme
+Increment planning, velocity, and portfolio funding have no cap equivalent. Scrum's
+ceremonies (sprint, retrospective, review) are outside cap's scope.
+
+**No framework equivalent:** cap's inline invariant ownership — a capability that
+directly lists its own rules — and the capability bundle (the resolved context an agent
+reads to generate code or tests) have no direct counterpart in the frameworks above.
+
 ## Getting started
 
 Document a part of the system from the top down, starting with its bounded context.
@@ -229,6 +257,15 @@ nix develop
 
 ```bash
 go build -o cap ./cmd/cap
+```
+
+### ui
+
+Run the desktop UI locally. Must be run inside the Nix dev shell (`nix develop`),
+which provides the WebKitGTK libraries required on Linux.
+
+```bash
+nixGLIntel go run -tags desktop,production,webkit2_41 ./cmd/capui
 ```
 
 ### test

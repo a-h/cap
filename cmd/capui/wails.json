@@ -1,0 +1,23 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "cap",
+  "outputfilename": "cap",
+  "frontend": {
+    "dir": ".",
+    "install": "echo skip",
+    "build": "echo skip",
+    "dev:watcher": "echo skip",
+    "devUrl": ""
+  },
+  "info": {
+    "companyName": "",
+    "productName": "cap",
+    "productVersion": "0.0.1",
+    "description": "Capability documentation tool",
+    "copyright": "",
+    "comments": ""
+  },
+  "nsisType": "multiple",
+  "obfuscated": false,
+  "garbleArgs": ""
+}
