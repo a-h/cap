@@ -13,7 +13,7 @@ recorded problem, and the entities that did parse are still available to every r
 
 ## Capabilities
 
-- cap-0002
+- [cap-0002 Load the model](../capabilities/cap-0002-load-the-model.md)
 
 ## Rationale
 

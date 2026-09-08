@@ -1,0 +1,45 @@
+package tree
+
+import (
+	"strconv"
+	"fmt"
+)
+
+templ Tree(rows []Row) {
+	for _, row := range rows {
+		@treeRow(row)
+	}
+}
+
+templ treeRow(row Row) {
+	<div
+		class={ "tr", templ.KV("shared", row.Shared) }
+		data-id={ row.ID }
+		data-depth={ strconv.Itoa(row.Depth) }
+		if row.Parent != "" {
+			data-parent={ row.Parent }
+		}
+		if row.HasKids {
+			data-has-kids="1"
+		}
+		hx-get={ fmt.Sprintf("/entities/%s", row.ID) }
+		hx-target="#detail-panel"
+		hx-swap="innerHTML"
+	>
+		<div class="tc-title">
+			<span class="tc-indent" style={ fmt.Sprintf("width:%dpx", row.Depth*16) }></span>
+			<span class={ "tc-toggle", templ.KV("leaf", !row.HasKids) }>▶</span>
+			<span class="tc-dot" style={ "background:" + row.Color }></span>
+			<span class={ "tc-label", templ.KV("shared-ref", row.Shared) } title={ row.Title }>{ row.Title }</span>
+		</div>
+		<div class="tc-kind">
+			<span class="kbadge" style={ "background:" + row.Color }>{ row.Kind }</span>
+		</div>
+		<div class="tc-id">{ row.ID }</div>
+		<div class="tc-status">
+			if row.Status != "" {
+				<span class="sbadge" style={ "background:" + StatusColor(row.Status) }>{ row.Status }</span>
+			}
+		</div>
+	</div>
+}

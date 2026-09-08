@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- context: ctx-0001
+- context: [ctx-0001 Documentation model](../contexts/ctx-0001-documentation-model.md)
 - status: done
 
 ## Description
@@ -33,7 +33,7 @@ Out of scope:
 
 ## Invariants
 
-- inv-0002
+- [inv-0002 An entity has a canonical identifier](../invariants/inv-0002-an-entity-has-a-canonical-identifier.md)
 
 ## Specifications
 
@@ -50,7 +50,7 @@ Out of scope:
 
 ## Scenarios
 
-- scn-0002
+- [scn-0002 Document existing code](../scenarios/scn-0002-document-existing-code.md)
 
 ## Verification
 

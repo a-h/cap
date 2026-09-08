@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- context: ctx-0001
+- context: [ctx-0001 Documentation model](../contexts/ctx-0001-documentation-model.md)
 - status: done
 
 ## Description
@@ -33,8 +33,8 @@ Out of scope:
 
 ## Invariants
 
-- inv-0002
-- inv-0004
+- [inv-0002 An entity has a canonical identifier](../invariants/inv-0002-an-entity-has-a-canonical-identifier.md)
+- [inv-0004 Loading tolerates malformed content](../invariants/inv-0004-loading-tolerates-malformed-content.md)
 
 ## Specifications
 
@@ -52,7 +52,7 @@ Out of scope:
 
 ## ADRs
 
-- adr-0003
+- [adr-0003](../../docs/adr/0003-support-adrs-managed-by-external-adr-tools-directories.md)
 
 ## Scenarios
 

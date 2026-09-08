@@ -4,14 +4,15 @@
 
 ## Specifies (optional)
 
-List the capabilities this specification is the design of, one identifier per bullet,
-for example `cap-0003`. A specification may specify several capabilities. To specify a
-whole bounded context instead, name the context here, for example `ctx-0001`. Declare a
-capability link on both entities: name the capabilities here, and name this
-specification under each capability's Specifications section. Either file then shows the
-relationship on its own, and cap validate warns when only one side names the other.
+List the capabilities this specification is the design of, one Markdown link per
+bullet, for example `[Validate the model](../capabilities/cap-0003-validate-the-model.md)`.
+A specification may specify several capabilities. To specify a whole bounded context
+instead, link the context here. Declare a capability link on both entities: name the
+capabilities here, and name this specification under each capability's Specifications
+section. Either file then shows the relationship on its own, and cap validate warns
+when only one side names the other.
 
-- cap-0003
+- [Capability name](../capabilities/cap-0003-capability-name.md)
 
 ## Description
 

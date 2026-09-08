@@ -6,3 +6,5 @@ require (
 	github.com/alecthomas/kong v1.15.0
 	github.com/google/go-cmp v0.7.0
 )
+
+require github.com/a-h/templ v0.3.1020 // indirect

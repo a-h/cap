@@ -14,13 +14,13 @@ how it is achieved.
 
 ## Capabilities (optional)
 
-List the capabilities this invariant constrains, one identifier per bullet, for
-example `cap-0003`. Declare the link on both entities: name the capabilities here, and
-name this invariant under each capability's Invariants section. Either file then shows
-the relationship on its own, and cap validate warns when only one side names the
-other.
+List the capabilities this invariant constrains, one Markdown link per bullet, for
+example `[Validate the model](../capabilities/cap-0003-validate-the-model.md)`.
+Declare the link on both entities: name the capabilities here, and name this invariant
+under each capability's Invariants section. Either file then shows the relationship on
+its own, and cap validate warns when only one side names the other.
 
-- cap-0003
+- [Capability name](../capabilities/cap-0003-capability-name.md)
 
 ## Rationale (optional)
 

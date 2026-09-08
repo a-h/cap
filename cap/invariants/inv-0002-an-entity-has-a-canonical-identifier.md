@@ -13,8 +13,8 @@ loading reads the identifier from the file name.
 
 ## Capabilities
 
-- cap-0001
-- cap-0002
+- [cap-0001 Scaffold an entity](../capabilities/cap-0001-scaffold-an-entity.md)
+- [cap-0002 Load the model](../capabilities/cap-0002-load-the-model.md)
 
 ## Rationale
 

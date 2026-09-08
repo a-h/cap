@@ -63,6 +63,7 @@
         pkgs.go
         pkgs.goreleaser
         pkgs.govulncheck
+        pkgs.templ
         pkgs.version
         pkgs.xc
       ];

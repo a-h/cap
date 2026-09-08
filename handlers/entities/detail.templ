@@ -1,0 +1,55 @@
+package entities
+
+templ Detail(view EntityView) {
+	<div id="detail-inner">
+		<div id="dh">
+			<div id="dh-id">{ view.ID }</div>
+			<div id="dh-title">{ view.Title }</div>
+			<div id="dh-actions">
+				<span class="kbadge-lg" style={ "background:" + view.Color }>{ view.Kind }</span>
+				if view.Status != "" {
+					<span class="sbadge" style={ "background:" + StatusColor(view.Status) }>{ view.Status }</span>
+				}
+				if view.FilePath != "" {
+					<button id="btn-save" class="btn btn-primary" onclick="saveEntity()">Save</button>
+				}
+			</div>
+		</div>
+		if view.FileContent != "" {
+			<div id="editor-wrap" data-content={ view.FileContent } data-file-id={ view.ID }></div>
+		}
+		if len(view.LinksTo) > 0 || len(view.LinkedBy) > 0 {
+			<div id="db">
+				if len(view.LinksTo) > 0 {
+					<div class="ds">
+						<h3>Links to</h3>
+						for _, rel := range view.LinksTo {
+							@relationship(rel)
+						}
+					</div>
+				}
+				if len(view.LinkedBy) > 0 {
+					<div class="ds">
+						<h3>Linked by</h3>
+						for _, rel := range view.LinkedBy {
+							@relationship(rel)
+						}
+					</div>
+				}
+			</div>
+		}
+	</div>
+}
+
+templ relationship(rel RelLink) {
+	<div
+		class="dr"
+		hx-get={ "/entities/" + rel.ID }
+		hx-target="#detail-panel"
+		hx-swap="innerHTML"
+	>
+		<span class="dot" style={ "background:" + rel.Color }></span>
+		<span class="rid">{ rel.ID }</span>
+		<span class="rtitle" title={ rel.Title }>{ rel.Title }</span>
+	</div>
+}

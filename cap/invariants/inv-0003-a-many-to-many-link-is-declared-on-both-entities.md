@@ -14,7 +14,7 @@ reported as asymmetric.
 
 ## Capabilities
 
-- cap-0003
+- [cap-0003 Validate the model](../capabilities/cap-0003-validate-the-model.md)
 
 ## Rationale
 

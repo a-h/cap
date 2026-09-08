@@ -12,4 +12,4 @@ Describe the end-to-end path through the system and who follows it.
 
 ## Capabilities
 
-- Link the capabilities this scenario depends on, by identifier.
+- [Capability name](../capabilities/cap-0001-capability-name.md)

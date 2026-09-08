@@ -5,12 +5,14 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
 
 	"github.com/a-h/cap/cmd/globals"
 	capcontext "github.com/a-h/cap/context"
+	"github.com/a-h/cap/handlers"
 	"github.com/a-h/cap/model"
 	"github.com/a-h/cap/query"
 	"github.com/a-h/cap/review"
@@ -31,6 +33,20 @@ type CLI struct {
 	Graph    GraphCmd    `cmd:"" help:"Print the top-down composition tree for an entity"`
 	Context  ContextCmd  `cmd:"" help:"Print the context bundle for a capability"`
 	Review   ReviewCmd   `cmd:"" help:"Print a review packet for an entity, or the whole model"`
+	UI       UICmd       `cmd:"" help:"Start the web UI"`
+}
+
+// UICmd starts the web UI server.
+type UICmd struct {
+	Root string `help:"Path to the system model root directory" default:"cap" env:"CAP_ROOT"`
+	Port int    `help:"Port to listen on" default:"8080" env:"CAP_UI_PORT"`
+}
+
+func (cmd *UICmd) Run(out io.Writer) error {
+	mux := handlers.NewMux(cmd.Root)
+	addr := fmt.Sprintf(":%d", cmd.Port)
+	fmt.Fprintf(out, "cap ui listening at http://localhost%s\n", addr)
+	return http.ListenAndServe(addr, mux)
 }
 
 var Version = "dev"

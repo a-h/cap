@@ -4,7 +4,7 @@
 
 ## Metadata (optional)
 
-- context:
+- context: [Context name](../contexts/ctx-XXXX-context-name.md)
 
 ## Definition
 

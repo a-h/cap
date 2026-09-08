@@ -182,13 +182,18 @@ func joinStatuses() string {
 }
 
 // parseMetaID reads a metadata value as an entity identifier in canonical form,
-// returning the empty identifier when the key is absent or empty.
+// accepting both a bare identifier ("ctx-0001") and a Markdown link whose URL
+// contains the identifier ("[Title](../contexts/ctx-0001-name.md)").
 func parseMetaID(meta map[string]string, key string) model.ID {
 	value := meta[key]
 	if value == "" {
 		return ""
 	}
-	return model.ID(value).Canonical()
+	id, ok := markdown.Item{Text: value}.Reference()
+	if !ok {
+		return ""
+	}
+	return model.ID(id).Canonical()
 }
 
 // parseReferences reads a link section as a list of entity identifiers. Items that do

@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- context: ctx-0002
+- context: [ctx-0002 Reporting](../contexts/ctx-0002-reporting.md)
 - status: done
 
 ## Description
@@ -57,7 +57,7 @@ Out of scope:
 
 ## Scenarios
 
-- scn-0001
+- [scn-0001 Generate code from a capability](../scenarios/scn-0001-generate-code-from-a-capability.md)
 
 ## Verification
 

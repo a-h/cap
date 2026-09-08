@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- context: ctx-0002
+- context: [ctx-0002 Reporting](../contexts/ctx-0002-reporting.md)
 - status: done
 
 ## Description

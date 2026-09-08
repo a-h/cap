@@ -12,7 +12,7 @@ whose kind does not match the section it appears in, is reported as a problem.
 
 ## Capabilities
 
-- cap-0003
+- [cap-0003 Validate the model](../capabilities/cap-0003-validate-the-model.md)
 
 ## Rationale
 

@@ -2,7 +2,7 @@
 
 ## Metadata
 
-- context: ctx-0002
+- context: [ctx-0002 Reporting](../contexts/ctx-0002-reporting.md)
 - status: done
 
 ## Description
@@ -36,8 +36,8 @@ Out of scope:
 
 ## Invariants
 
-- inv-0001
-- inv-0003
+- [inv-0001 A reference names an entity that exists](../invariants/inv-0001-a-reference-names-an-entity-that-exists.md)
+- [inv-0003 A many-to-many link is declared on both entities](../invariants/inv-0003-a-many-to-many-link-is-declared-on-both-entities.md)
 
 ## Specifications
 
@@ -53,7 +53,7 @@ Out of scope:
 
 ## Scenarios
 
-- scn-0002
+- [scn-0002 Document existing code](../scenarios/scn-0002-document-existing-code.md)
 
 ## Verification
 

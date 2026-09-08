@@ -4,7 +4,7 @@
 
 ## Metadata (optional)
 
-- context:
+- context: [Context name](../contexts/ctx-XXXX-context-name.md)
 - status: proposed
 
 ## Description
@@ -31,19 +31,19 @@ Out of scope:
 ## Invariants (optional)
 
 Write each invariant as a positive assertion of behaviour. A prose bullet is an
-inline invariant owned by this capability; a bullet that is an identifier
-(for example `inv-0001`) links to a shared invariant in its own file. When you link a
-shared invariant, name this capability under that invariant's Capabilities section
-too, so the link is declared on both entities.
+inline invariant owned by this capability; a Markdown link to the invariant's file
+(for example `[Policies are evaluated consistently](../invariants/inv-0001-policies-are-evaluated-consistently.md)`)
+links to a shared invariant. When you link a shared invariant, name this capability
+under that invariant's Capabilities section too, so the link is declared on both entities.
 
 - Policies are evaluated consistently.
 
 ## Specifications (optional)
 
 Write an inline specification as a subsection: its heading is the title, its bullets
-are the detail. A bullet that is an identifier links to a shared specification in its
-own file; use a shared specification when one design is relevant across several
-capabilities, or when the design spans the whole context.
+are the detail. A Markdown link to the specification's file links to a shared
+specification in its own file; use a shared specification when one design is relevant
+across several capabilities, or when the design spans the whole context.
 
 ### Name the behaviour, for example "Policy evaluation semantics"
 
@@ -55,8 +55,9 @@ capabilities, or when the design spans the whole context.
 
 ## Verification (optional)
 
-A bullet that is a path is inline verification owned by this capability; a bullet
-that is an identifier (for example `ver-0001`) links to a shared verification entity.
+A bullet that is a path is inline verification owned by this capability; a Markdown
+link to a verification file (for example `[ver-0001](../verification/ver-0001-name.md)`)
+links to a shared verification entity.
 
 - path/to/the/test
 

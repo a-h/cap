@@ -12,17 +12,20 @@ the source disagree. This is the path that produced cap's own self-documentation
 
 - The agent reads the source to identify the bounded contexts, concepts, and
   capabilities the code already implements.
-- The agent scaffolds an entity (cap-0001) for each context, concept, capability,
-  invariant, and scenario it finds, and fills each from the source, citing the tests
-  that verify it.
-- The agent validates the model (cap-0003) to find dangling references, asymmetric
-  links, and coverage gaps, and corrects them.
-- The agent reviews an entity (cap-0008) against the conventions to find where a name
-  reflects the mechanism rather than the use, or where the source asserts a behaviour
-  the model does not yet record as an invariant.
+- The agent scaffolds an entity
+  ([cap-0001](../capabilities/cap-0001-scaffold-an-entity.md)) for each context,
+  concept, capability, invariant, and scenario it finds, and fills each from the
+  source, citing the tests that verify it.
+- The agent validates the model
+  ([cap-0003](../capabilities/cap-0003-validate-the-model.md)) to find dangling
+  references, asymmetric links, and coverage gaps, and corrects them.
+- The agent reviews an entity
+  ([cap-0008](../capabilities/cap-0008-review-an-entity.md)) against the conventions
+  to find where a name reflects the mechanism rather than the use, or where the source
+  asserts a behaviour the model does not yet record as an invariant.
 
 ## Capabilities
 
-- cap-0001
-- cap-0003
-- cap-0008
+- [cap-0001 Scaffold an entity](../capabilities/cap-0001-scaffold-an-entity.md)
+- [cap-0003 Validate the model](../capabilities/cap-0003-validate-the-model.md)
+- [cap-0008 Review an entity](../capabilities/cap-0008-review-an-entity.md)
