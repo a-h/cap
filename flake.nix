@@ -161,6 +161,7 @@
 
       # CGO build inputs required by the Wails WebView per platform.
       # Windows uses WebView2 loaded via pure Go syscall (no CGO inputs needed).
+      # macOS uses the system SDK frameworks via Xcode CLT; no explicit Nix inputs needed.
       webviewCGOInputs =
         system: pkgs:
         if
@@ -173,17 +174,6 @@
             pkgs.pkg-config
             pkgs.gtk3
             pkgs.webkitgtk_4_1
-          ]
-        else if
-          builtins.elem system [
-            "x86_64-darwin"
-            "aarch64-darwin"
-          ]
-        then
-          [
-            pkgs.darwin.apple_sdk.frameworks.WebKit
-            pkgs.darwin.apple_sdk.frameworks.Cocoa
-            pkgs.darwin.apple_sdk.frameworks.AppKit
           ]
         else
           [ ];
