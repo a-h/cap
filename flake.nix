@@ -58,7 +58,7 @@
       v = nixpkgs.lib.strings.trim (builtins.readFile ./.version);
 
       # Vendor hash covering all Go dependencies including Wails.
-      vendorHash = "sha256-VHsoM/j7Uf4Wx7EaJnmW9ikAItA5Ypk9b2pIed7sEwA=";
+      vendorHash = "sha256-oXowhV2SBVTJOOFijShNUjwZyk0yGmzCLx07opmPF7k=";
 
       # Build the cap CLI (pure Go, no CGO).
       app =
