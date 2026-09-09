@@ -95,7 +95,14 @@
           buildInputs = webviewCGOInputs system pkgs;
           # The nixpkgs Go hook sets CGO_ENABLED=0 by default; override via preBuild
           # so we do not conflict with the env attr that buildGoModule manages internally.
-          preBuild = "export CGO_ENABLED=1";
+          # On macOS, Wails uses UTType (UniformTypeIdentifiers) for the directory picker
+          # but does not declare it in its own #cgo LDFLAGS, so we add it here.
+          preBuild =
+            "export CGO_ENABLED=1"
+            + lib.optionalString (builtins.elem system [
+              "x86_64-darwin"
+              "aarch64-darwin"
+            ]) "; export CGO_LDFLAGS=\"-framework UniformTypeIdentifiers\"";
           # webkit2_41 tells Wails to use webkit2gtk-4.1 pkg-config name;
           # webkitgtk_4_0 was removed from nixpkgs 26.05.
           tags = [
