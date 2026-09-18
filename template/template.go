@@ -30,15 +30,18 @@ const optionalMarker = "(optional)"
 
 // fileForKind maps an entity kind to its template filename.
 var fileForKind = map[model.Kind]string{
-	model.KindContext:       "context.md",
-	model.KindConcept:       "concept.md",
-	model.KindCapability:    "capability.md",
-	model.KindInvariant:     "invariant.md",
-	model.KindSpecification: "specification.md",
-	model.KindADR:           "adr.md",
-	model.KindScenario:      "scenario.md",
-	model.KindVerification:  "verification.md",
-	model.KindTask:          "task.md",
+	model.KindContext:        "context.md",
+	model.KindConcept:        "concept.md",
+	model.KindCapability:     "capability.md",
+	model.KindInvariant:      "invariant.md",
+	model.KindSpecification:  "specification.md",
+	model.KindADR:            "adr.md",
+	model.KindScenario:       "scenario.md",
+	model.KindVerification:   "verification.md",
+	model.KindTask:           "task.md",
+	model.KindService:        "service.md",
+	model.KindExternalSystem: "external-system.md",
+	model.KindRequirement:    "requirement.md",
 }
 
 // LoadDefault returns the embedded default template for a kind. It reports ok=false

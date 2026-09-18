@@ -50,6 +50,15 @@ func Title(m *model.Model, id model.ID) string {
 	if t, ok := m.Tasks[id]; ok {
 		return t.Title
 	}
+	if s, ok := m.Services[id]; ok {
+		return s.Name
+	}
+	if e, ok := m.ExternalSystems[id]; ok {
+		return e.Name
+	}
+	if r, ok := m.Requirements[id]; ok {
+		return r.Title
+	}
 	return ""
 }
 
@@ -94,6 +103,18 @@ func List(m *model.Model, kind model.Kind) []Entry {
 		for id, t := range m.Tasks {
 			entries = append(entries, Entry{ID: id, Title: t.Title})
 		}
+	case model.KindService:
+		for id, s := range m.Services {
+			entries = append(entries, Entry{ID: id, Title: s.Name})
+		}
+	case model.KindExternalSystem:
+		for id, e := range m.ExternalSystems {
+			entries = append(entries, Entry{ID: id, Title: e.Name})
+		}
+	case model.KindRequirement:
+		for id, r := range m.Requirements {
+			entries = append(entries, Entry{ID: id, Title: r.Title})
+		}
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].ID < entries[j].ID })
 	return entries
@@ -123,6 +144,12 @@ func Children(m *model.Model, id model.ID) []model.ID {
 	if _, ok := m.Contexts[id]; ok {
 		return append(getConceptsInContext(m, id), getCapabilitiesInContext(m, id)...)
 	}
+	if s, ok := m.Services[id]; ok {
+		return s.Capabilities
+	}
+	if r, ok := m.Requirements[id]; ok {
+		return dedupe(append(append([]model.ID(nil), r.Capabilities...), getCapabilitiesNamingRequirement(m, id)...))
+	}
 	return nil
 }
 
@@ -148,6 +175,9 @@ func Parents(m *model.Model, id model.ID) []model.ID {
 		for _, sid := range c.Scenarios {
 			add(sid)
 		}
+		for _, rid := range c.Requirements {
+			add(rid)
+		}
 	}
 	for jid, j := range m.Scenarios {
 		if slices.Contains(j.Capabilities, id) {
@@ -157,6 +187,16 @@ func Parents(m *model.Model, id model.ID) []model.ID {
 	for cid, c := range m.Capabilities {
 		if capabilityLinksTo(c, id) {
 			add(cid)
+		}
+	}
+	for sid, s := range m.Services {
+		if slices.Contains(s.Capabilities, id) {
+			add(sid)
+		}
+	}
+	for rid, r := range m.Requirements {
+		if slices.Contains(r.Capabilities, id) {
+			add(rid)
 		}
 	}
 	if inv, ok := m.Invariants[id]; ok {
@@ -244,9 +284,9 @@ func getConceptsInContext(m *model.Model, ctx model.ID) []model.ID {
 }
 
 // capabilityLinksTo reports whether the capability references the given identifier as
-// one of its downward children. The scenarios a capability names are deliberately
-// excluded: a scenario sits above the capabilities it uses, so a capability naming a
-// scenario records an upward link, not a child.
+// one of its downward children. The scenarios and requirements a capability names are
+// deliberately excluded: those entities sit above the capabilities they use, so a
+// capability naming them records an upward link, not a child.
 func capabilityLinksTo(c model.Capability, id model.ID) bool {
 	for _, set := range [][]model.ID{c.Invariants, c.Specifications, c.ADRs, c.Verification, c.Tasks} {
 		if slices.Contains(set, id) {
@@ -254,6 +294,20 @@ func capabilityLinksTo(c model.Capability, id model.ID) bool {
 		}
 	}
 	return false
+}
+
+// getCapabilitiesNamingRequirement returns the capabilities that name the given
+// requirement in their Requirements section, so the bidirectional link is visible
+// whether declared on the requirement or the capability.
+func getCapabilitiesNamingRequirement(m *model.Model, requirement model.ID) []model.ID {
+	var out []model.ID
+	for id, c := range m.Capabilities {
+		if slices.Contains(c.Requirements, requirement) {
+			out = append(out, id)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
 }
 
 func dedupe(ids []model.ID) []model.ID {

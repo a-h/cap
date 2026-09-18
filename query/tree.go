@@ -13,11 +13,12 @@ import (
 // when the identifier already appeared higher on the current path and so was not
 // expanded again.
 type Node struct {
-	ID       model.ID `json:"id"`
-	Title    string   `json:"title"`
-	Resolved bool     `json:"resolved"`
-	Repeated bool     `json:"repeated,omitempty"`
-	Children []Node   `json:"children,omitempty"`
+	ID       model.ID   `json:"id"`
+	Kind     model.Kind `json:"kind,omitempty"`
+	Title    string     `json:"title"`
+	Resolved bool       `json:"resolved"`
+	Repeated bool       `json:"repeated,omitempty"`
+	Children []Node     `json:"children,omitempty"`
 }
 
 // BuildTree builds the downward composition tree rooted at id, applying the given
@@ -29,8 +30,8 @@ func BuildTree(m *model.Model, id model.ID, opts Options) Node {
 }
 
 func buildNode(m *model.Model, id model.ID, depth int, opts Options, path map[model.ID]struct{}) Node {
-	_, resolved := m.Lookup(id)
-	node := Node{ID: id, Title: Title(m, id), Resolved: resolved}
+	kind, resolved := m.Lookup(id)
+	node := Node{ID: id, Kind: kind, Title: Title(m, id), Resolved: resolved}
 	if !resolved {
 		return node
 	}
@@ -130,13 +131,22 @@ func allIDs(m *model.Model) []model.ID {
 	for id := range m.Tasks {
 		out = append(out, id)
 	}
+	for id := range m.Services {
+		out = append(out, id)
+	}
+	for id := range m.ExternalSystems {
+		out = append(out, id)
+	}
+	for id := range m.Requirements {
+		out = append(out, id)
+	}
 	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
 	return out
 }
 
 // topLevelIDs returns the identifiers of entities that no other entity links to and
-// so sit at the top of the composition graph, such as scenarios and capabilities
-// that declare no context.
+// so sit at the top of the composition graph, such as scenarios, services, external
+// systems, requirements, and capabilities that declare no context.
 func topLevelIDs(m *model.Model) []model.ID {
 	var out []model.ID
 	for id := range m.Scenarios {
@@ -148,6 +158,15 @@ func topLevelIDs(m *model.Model) []model.ID {
 		if len(Parents(m, id)) == 0 {
 			out = append(out, id)
 		}
+	}
+	for id := range m.Services {
+		out = append(out, id)
+	}
+	for id := range m.ExternalSystems {
+		out = append(out, id)
+	}
+	for id := range m.Requirements {
+		out = append(out, id)
 	}
 	return out
 }

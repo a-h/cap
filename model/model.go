@@ -16,15 +16,18 @@ import (
 type Kind string
 
 const (
-	KindContext       Kind = "context"
-	KindConcept       Kind = "concept"
-	KindCapability    Kind = "capability"
-	KindInvariant     Kind = "invariant"
-	KindSpecification Kind = "specification"
-	KindADR           Kind = "adr"
-	KindScenario      Kind = "scenario"
-	KindVerification  Kind = "verification"
-	KindTask          Kind = "task"
+	KindContext        Kind = "context"
+	KindConcept        Kind = "concept"
+	KindCapability     Kind = "capability"
+	KindInvariant      Kind = "invariant"
+	KindSpecification  Kind = "specification"
+	KindADR            Kind = "adr"
+	KindScenario       Kind = "scenario"
+	KindVerification   Kind = "verification"
+	KindTask           Kind = "task"
+	KindService        Kind = "service"
+	KindExternalSystem Kind = "external-system"
+	KindRequirement    Kind = "requirement"
 )
 
 // numberWidth is the zero-padded width of the numeric part of a canonical
@@ -88,6 +91,7 @@ type Capability struct {
 	Scenarios      []ID   `json:"scenarios,omitempty"`
 	Verification   []ID   `json:"verification,omitempty"`
 	Tasks          []ID   `json:"tasks,omitempty"`
+	Requirements   []ID   `json:"requirements,omitempty"`
 }
 
 // Status records the lifecycle state of an entity that represents work in progress,
@@ -208,6 +212,34 @@ type Task struct {
 	Status Status `json:"status,omitempty"`
 }
 
+// Service is a deployable unit that implements one or more capabilities. A service
+// may span bounded contexts.
+type Service struct {
+	ID           ID     `json:"id"`
+	Name         string `json:"name"`
+	Capabilities []ID   `json:"capabilities,omitempty"`
+}
+
+// ExternalSystem is a named third-party or out-of-boundary system that this system
+// depends on. It is not owned by this project and has no capabilities of its own in
+// the model.
+type ExternalSystem struct {
+	ID   ID     `json:"id"`
+	Name string `json:"name"`
+}
+
+// Requirement is a contractual or regulatory obligation from an external source,
+// such as a statement of work, a standard, or a regulation. It is satisfied by the
+// capabilities linked to it. The identifier encodes the external reference, for
+// example req-sow-0023 for SOW-0023.
+type Requirement struct {
+	ID           ID     `json:"id"`
+	Title        string `json:"title"`
+	Source       string `json:"source,omitempty"`
+	Statement    string `json:"statement,omitempty"`
+	Capabilities []ID   `json:"capabilities,omitempty"`
+}
+
 // MapToEntityKind derives the entity kind from the identifier's prefix, matched
 // case-insensitively. It reports ok=false when the identifier has no prefix or the
 // prefix is not a known kind.
@@ -235,35 +267,47 @@ func (id ID) MapToEntityKind() (kind Kind, ok bool) {
 		return KindVerification, true
 	case "task":
 		return KindTask, true
+	case "svc":
+		return KindService, true
+	case "ext":
+		return KindExternalSystem, true
+	case "req":
+		return KindRequirement, true
 	}
 	return "", false
 }
 
 // Model is the complete, loaded system model, indexed by identifier.
 type Model struct {
-	Contexts       map[ID]Context
-	Concepts       map[ID]Concept
-	Capabilities   map[ID]Capability
-	Invariants     map[ID]Invariant
-	Specifications map[ID]Specification
-	ADRs           map[ID]ADR
-	Scenarios      map[ID]Scenario
-	Verification   map[ID]Verification
-	Tasks          map[ID]Task
+	Contexts        map[ID]Context
+	Concepts        map[ID]Concept
+	Capabilities    map[ID]Capability
+	Invariants      map[ID]Invariant
+	Specifications  map[ID]Specification
+	ADRs            map[ID]ADR
+	Scenarios       map[ID]Scenario
+	Verification    map[ID]Verification
+	Tasks           map[ID]Task
+	Services        map[ID]Service
+	ExternalSystems map[ID]ExternalSystem
+	Requirements    map[ID]Requirement
 }
 
 // NewModel returns a Model with all indexes initialised.
 func NewModel() *Model {
 	return &Model{
-		Contexts:       map[ID]Context{},
-		Concepts:       map[ID]Concept{},
-		Capabilities:   map[ID]Capability{},
-		Invariants:     map[ID]Invariant{},
-		Specifications: map[ID]Specification{},
-		ADRs:           map[ID]ADR{},
-		Scenarios:      map[ID]Scenario{},
-		Verification:   map[ID]Verification{},
-		Tasks:          map[ID]Task{},
+		Contexts:        map[ID]Context{},
+		Concepts:        map[ID]Concept{},
+		Capabilities:    map[ID]Capability{},
+		Invariants:      map[ID]Invariant{},
+		Specifications:  map[ID]Specification{},
+		ADRs:            map[ID]ADR{},
+		Scenarios:       map[ID]Scenario{},
+		Verification:    map[ID]Verification{},
+		Tasks:           map[ID]Task{},
+		Services:        map[ID]Service{},
+		ExternalSystems: map[ID]ExternalSystem{},
+		Requirements:    map[ID]Requirement{},
 	}
 }
 
@@ -296,6 +340,15 @@ func (m *Model) Lookup(id ID) (kind Kind, ok bool) {
 	}
 	if _, ok := m.Tasks[id]; ok {
 		return KindTask, true
+	}
+	if _, ok := m.Services[id]; ok {
+		return KindService, true
+	}
+	if _, ok := m.ExternalSystems[id]; ok {
+		return KindExternalSystem, true
+	}
+	if _, ok := m.Requirements[id]; ok {
+		return KindRequirement, true
 	}
 	return "", false
 }

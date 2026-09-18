@@ -48,6 +48,9 @@ func TestParseID(t *testing.T) {
 		{name: "an uppercase unpadded identifier is fully normalised", path: "cap/invariants/INV-1-thing.md", wantID: "inv-0001", wantOK: true},
 		{name: "a verification identifier is parsed", path: "cap/verification/ver-0008-smoke.md", wantID: "ver-0008", wantOK: true},
 		{name: "a filename without an identifier reports not ok", path: "cap/contexts/notes.md", wantOK: false},
+		{name: "a compound requirement identifier with a slug is parsed", path: "cap/requirements/req-sow-0023-provide-t2o-services.md", wantID: "req-sow-0023", wantOK: true},
+		{name: "a compound requirement identifier without a slug is parsed", path: "cap/requirements/req-sow-0023.md", wantID: "req-sow-0023", wantOK: true},
+		{name: "an uppercase compound identifier is normalised", path: "cap/requirements/REQ-SOW-0023.md", wantID: "req-sow-0023", wantOK: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

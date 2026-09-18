@@ -160,6 +160,20 @@ func hintAsymmetricLinks(m *model.Model, files map[model.ID]string) []store.Prob
 			}
 		}
 	}
+	for _, req := range m.Requirements {
+		for _, cid := range req.Capabilities {
+			if c, ok := m.Capabilities[cid]; ok && !slices.Contains(c.Requirements, req.ID) {
+				warn(req.ID, req.ID, cid)
+			}
+		}
+	}
+	for _, c := range m.Capabilities {
+		for _, rid := range c.Requirements {
+			if req, ok := m.Requirements[rid]; ok && !slices.Contains(req.Capabilities, c.ID) {
+				warn(c.ID, c.ID, rid)
+			}
+		}
+	}
 	sort.Slice(problems, func(i, j int) bool { return problems[i].Message < problems[j].Message })
 	return problems
 }
@@ -211,7 +225,31 @@ func hintGaps(m *model.Model, files map[model.ID]string) []store.Problem {
 			problems = append(problems, store.Problem{File: files[id], Severity: store.SeverityWarning, Message: fmt.Sprintf("%s has no status", id)})
 		}
 	}
+	var reqIDs []model.ID
+	for id := range m.Requirements {
+		reqIDs = append(reqIDs, id)
+	}
+	sort.Slice(reqIDs, func(i, j int) bool { return reqIDs[i] < reqIDs[j] })
+	for _, id := range reqIDs {
+		if !requirementHasCapabilities(m, id) {
+			problems = append(problems, store.Problem{File: files[id], Severity: store.SeverityWarning, Message: fmt.Sprintf("%s has no capabilities", id)})
+		}
+	}
 	return problems
+}
+
+// requirementHasCapabilities reports whether any capability is linked to the
+// requirement, whether the link is declared on the requirement or the capability.
+func requirementHasCapabilities(m *model.Model, id model.ID) bool {
+	if len(m.Requirements[id].Capabilities) > 0 {
+		return true
+	}
+	for _, c := range m.Capabilities {
+		if slices.Contains(c.Requirements, id) {
+			return true
+		}
+	}
+	return false
 }
 
 // inlineOwner reports whether the identifier names an inline entity and, if so, the
@@ -293,6 +331,15 @@ func collectReferences(m *model.Model) []reference {
 	}
 	for _, j := range m.Scenarios {
 		add(j.ID, store.SectionCapabilities, model.KindCapability, j.Capabilities)
+	}
+	for _, s := range m.Services {
+		add(s.ID, store.SectionCapabilities, model.KindCapability, s.Capabilities)
+	}
+	for _, r := range m.Requirements {
+		add(r.ID, store.SectionCapabilities, model.KindCapability, r.Capabilities)
+	}
+	for _, c := range m.Capabilities {
+		add(c.ID, store.SectionRequirements, model.KindRequirement, c.Requirements)
 	}
 	return refs
 }

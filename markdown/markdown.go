@@ -36,6 +36,9 @@ type Section struct {
 	Title string
 	Line  int
 	Items []Item
+	// Prose holds non-bullet, non-HTML-comment lines that appear beneath the
+	// heading, preserving the order they appear in the source.
+	Prose []string
 	// HasContent reports whether any non-blank line, prose or bullet, appears
 	// beneath the heading. It distinguishes an empty section from one with content
 	// even when that content is prose rather than parsed items.
@@ -134,6 +137,8 @@ func Parse(r io.Reader) (doc Document, err error) {
 		}
 		if text, ok := parseBullet(trimmed); ok {
 			current.Items = append(current.Items, Item{Text: text, Line: line})
+		} else if trimmed != "" && !strings.HasPrefix(trimmed, "<!--") {
+			current.Prose = append(current.Prose, trimmed)
 		}
 	}
 	if err := scanner.Err(); err != nil {

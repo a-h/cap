@@ -12,7 +12,9 @@
 //	├── scenarios/
 //	├── verification/
 //	├── adrs/
-//	└── tasks/
+//	├── tasks/
+//	├── services/
+//	└── external-systems/
 //
 // Each file is a structured Markdown document whose identifier is derived from
 // its filename.
@@ -51,26 +53,35 @@ const (
 	SectionCapabilities   = "Capabilities"
 	SectionPaths          = "Paths"
 	SectionSpecifies      = "Specifies"
+	SectionRequirements   = "Requirements"
+	SectionStatement      = "Statement"
 )
 
 // DirForKind maps an entity kind to its subdirectory beneath the system root.
 var DirForKind = map[model.Kind]string{
-	model.KindContext:       "contexts",
-	model.KindConcept:       "concepts",
-	model.KindCapability:    "capabilities",
-	model.KindInvariant:     "invariants",
-	model.KindSpecification: "specifications",
-	model.KindADR:           "adrs",
-	model.KindScenario:      "scenarios",
-	model.KindVerification:  "verification",
-	model.KindTask:          "tasks",
+	model.KindContext:        "contexts",
+	model.KindConcept:        "concepts",
+	model.KindCapability:     "capabilities",
+	model.KindInvariant:      "invariants",
+	model.KindSpecification:  "specifications",
+	model.KindADR:            "adrs",
+	model.KindScenario:       "scenarios",
+	model.KindVerification:   "verification",
+	model.KindTask:           "tasks",
+	model.KindService:        "services",
+	model.KindExternalSystem: "external-systems",
+	model.KindRequirement:    "requirements",
 }
 
-// idFromFilename matches an identifier at the start of a filename, for example
-// "cap-0003" in "cap-0003-evaluate-policies.md". The prefix may be any case and
-// the numeric part may be unpadded; the captured identifier is canonicalised by
-// the caller. An optional descriptive slug follows the number.
-var idFromFilename = regexp.MustCompile(`^([A-Za-z][A-Za-z0-9]*-[0-9]+)(?:-.*)?$`)
+// idFromFilename matches an identifier at the start of a filename. The canonical
+// form is a lowercase prefix, an optional alphabetic middle segment, and a
+// zero-padded number, for example "cap-0003" or "req-sow-0023". The middle
+// segment, when present, allows requirement files to embed their external
+// identifier (for example "req-sow-0023-provide-t2o.md"). The numeric part
+// always anchors the end of the identifier, so a digit-initial token (like
+// "-0003") is never consumed as a middle segment. The captured identifier is
+// canonicalised by the caller. An optional descriptive slug may follow.
+var idFromFilename = regexp.MustCompile(`^([A-Za-z][A-Za-z0-9]*(?:-[A-Za-z][A-Za-z0-9]*)*-[0-9]+)(?:-.*)?$`)
 
 // Problem is a single finding raised while loading or validating the model.
 type Problem struct {

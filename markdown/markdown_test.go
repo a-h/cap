@@ -65,6 +65,30 @@ func TestParse(t *testing.T) {
 			},
 		},
 		{
+			name:  "prose lines are captured in the section's Prose field",
+			input: "# Title\n\n## Statement\n\nThe contractor shall provide T2O services.\nOnce PSA has been achieved.\n\n## Capabilities\n\n- cap-0001\n",
+			check: func(t *testing.T, doc Document) {
+				sec, ok := doc.FindSection("Statement")
+				if !ok {
+					t.Fatalf("expected a Statement section")
+				}
+				want := []string{"The contractor shall provide T2O services.", "Once PSA has been achieved."}
+				if diff := cmp.Diff(want, sec.Prose); diff != "" {
+					t.Errorf("prose mismatch (-want +got):\n%s", diff)
+				}
+			},
+		},
+		{
+			name:  "HTML comments are excluded from prose",
+			input: "# Title\n\n## Statement\n\n<!-- guidance -->\nThe contractor shall provide T2O services.\n",
+			check: func(t *testing.T, doc Document) {
+				sec, _ := doc.FindSection("Statement")
+				if len(sec.Prose) != 1 || sec.Prose[0] != "The contractor shall provide T2O services." {
+					t.Errorf("expected only the non-comment line, got %#v", sec.Prose)
+				}
+			},
+		},
+		{
 			name:  "asterisk and plus bullet markers are recognised",
 			input: "# Title\n\n## Tasks\n\n* TASK-1\n+ TASK-2\n",
 			check: func(t *testing.T, doc Document) {

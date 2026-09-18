@@ -77,6 +77,48 @@ func TestScaffold(t *testing.T) {
 			t.Errorf("got %q, expected task-0001-implement-the-policy-cache-v2.md", filepath.Base(path))
 		}
 	})
+
+	t.Run("a name that slugifies to a valid identifier uses the slug as the identifier", func(t *testing.T) {
+		path, err := Scaffold(t.TempDir(), model.KindRequirement, "SOW-0023")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if filepath.Base(path) != "req-sow-0023.md" {
+			t.Errorf("got %q, expected req-sow-0023.md", filepath.Base(path))
+		}
+	})
+
+	t.Run("a plain English name falls back to auto-numbering even for requirements", func(t *testing.T) {
+		path, err := Scaffold(t.TempDir(), model.KindRequirement, "Provide T2O services")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if filepath.Base(path) != "req-0001-provide-t2o-services.md" {
+			t.Errorf("got %q, expected req-0001-provide-t2o-services.md", filepath.Base(path))
+		}
+	})
+
+	t.Run("a slug-based identifier that already exists falls back to auto-numbering", func(t *testing.T) {
+		root := t.TempDir()
+		writeFile(t, root, "requirements", "req-sow-0023.md", "# SOW-0023\n")
+		path, err := Scaffold(root, model.KindRequirement, "SOW-0023")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if filepath.Base(path) != "req-0001-sow-0023.md" {
+			t.Errorf("got %q, expected req-0001-sow-0023.md", filepath.Base(path))
+		}
+	})
+
+	t.Run("a JIRA-style name uses the slug as the identifier for any kind", func(t *testing.T) {
+		path, err := Scaffold(t.TempDir(), model.KindTask, "PROJ-123")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if filepath.Base(path) != "task-proj-123.md" {
+			t.Errorf("got %q, expected task-proj-123.md", filepath.Base(path))
+		}
+	})
 }
 
 func TestInit(t *testing.T) {

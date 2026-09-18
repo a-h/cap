@@ -60,8 +60,8 @@ func buildGraph(m *model.Model, roots []model.ID, opts Options) Graph {
 		if _, ok := nodes[id]; ok {
 			return
 		}
-		_, resolved := m.Lookup(id)
-		nodes[id] = Node{ID: id, Title: Title(m, id), Resolved: resolved}
+		kind, resolved := m.Lookup(id)
+		nodes[id] = Node{ID: id, Kind: kind, Title: Title(m, id), Resolved: resolved}
 	}
 	seenEdge := map[Edge]struct{}{}
 	var edges []Edge
@@ -126,7 +126,11 @@ func RenderDOT(g Graph) string {
 	b.WriteString("  rankdir=LR;\n")
 	b.WriteString("  node [shape=box];\n")
 	for _, n := range g.Nodes {
-		fmt.Fprintf(&b, "  %s [label=%s];\n", encodeDOT(string(n.ID)), encodeDOT(dotLabel(n)))
+		if n.Kind == model.KindExternalSystem {
+			fmt.Fprintf(&b, "  %s [label=%s, style=dashed];\n", encodeDOT(string(n.ID)), encodeDOT(dotLabel(n)))
+		} else {
+			fmt.Fprintf(&b, "  %s [label=%s];\n", encodeDOT(string(n.ID)), encodeDOT(dotLabel(n)))
+		}
 	}
 	for _, e := range g.Edges {
 		fmt.Fprintf(&b, "  %s -> %s;\n", encodeDOT(string(e.From)), encodeDOT(string(e.To)))

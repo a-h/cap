@@ -14,15 +14,18 @@ import (
 
 // prefixForKind maps an entity kind to its canonical identifier prefix.
 var prefixForKind = map[model.Kind]string{
-	model.KindContext:       "ctx",
-	model.KindConcept:       "con",
-	model.KindCapability:    "cap",
-	model.KindInvariant:     "inv",
-	model.KindSpecification: "spec",
-	model.KindADR:           "adr",
-	model.KindScenario:      "scn",
-	model.KindVerification:  "ver",
-	model.KindTask:          "task",
+	model.KindContext:        "ctx",
+	model.KindConcept:        "con",
+	model.KindCapability:     "cap",
+	model.KindInvariant:      "inv",
+	model.KindSpecification:  "spec",
+	model.KindADR:            "adr",
+	model.KindScenario:       "scn",
+	model.KindVerification:   "ver",
+	model.KindTask:           "task",
+	model.KindService:        "svc",
+	model.KindExternalSystem: "ext",
+	model.KindRequirement:    "req",
 }
 
 // optionalHeading matches a heading whose title ends with the optional marker, so
@@ -30,9 +33,14 @@ var prefixForKind = map[model.Kind]string{
 var optionalHeading = regexp.MustCompile(`(?i)^(#+\s+.*?)\s*\(optional\)\s*$`)
 
 // Scaffold creates a new entity file of the given kind from its template. The name
-// is used both as the document title and, slugified, as the descriptive part of
-// the filename. The next free number for the kind's identifier prefix is allocated.
-// It returns the path written.
+// is used as the document title. When the slugified name forms a valid identifier
+// (for example "SOW-0023" slugifies to "sow-0023", giving "req-sow-0023") and no
+// file with that name already exists, it is used as the identifier directly. This
+// lets external references such as SOW numbers or JIRA tickets become the entity's
+// identifier without a separate auto-number. When the slug does not form a valid
+// identifier, or the file already exists, the next free number for the prefix is
+// allocated and the slug is appended as a descriptive suffix. It returns the path
+// written.
 func Scaffold(root string, kind model.Kind, name string) (path string, err error) {
 	if kind == model.KindADR {
 		if external, ok := resolveADRDir(root); ok {
@@ -53,10 +61,22 @@ func Scaffold(root string, kind model.Kind, name string) (path string, err error
 		return "", fmt.Errorf("store: no template for kind %q", kind)
 	}
 
-	id := model.ID(fmt.Sprintf("%s-%d", prefix, findNextNumber(root, dir, prefix))).Canonical()
-	filename := string(id)
-	if slug := slugify(name); slug != "" {
-		filename += "-" + slug
+	slug := slugify(name)
+	var filename string
+	if slug != "" {
+		candidate := string(model.ID(prefix + "-" + slug).Canonical())
+		if _, ok := ParseID(candidate + ".md"); ok {
+			if _, err := os.Stat(filepath.Join(root, dir, candidate+".md")); os.IsNotExist(err) {
+				filename = candidate
+			}
+		}
+	}
+	if filename == "" {
+		id := model.ID(fmt.Sprintf("%s-%d", prefix, findNextNumber(root, dir, prefix))).Canonical()
+		filename = string(id)
+		if slug != "" {
+			filename += "-" + slug
+		}
 	}
 	path = filepath.Join(root, dir, filename+".md")
 	if _, err := os.Stat(path); err == nil {
@@ -96,14 +116,18 @@ func findNextNumber(root, dir, prefix string) int {
 	return highest + 1
 }
 
-// parseNumber returns the numeric part of a canonical identifier, or zero when it has
-// none.
+// parseNumber returns the numeric part of a simple prefix-N identifier (for example
+// 3 from "req-0003"), or zero when the identifier is compound (for example
+// "req-sow-0023") or has no numeric part. Compound identifiers are excluded so they
+// do not advance the auto-number counter when a directory contains a mix of
+// auto-numbered and slug-based identifiers.
 func parseNumber(id model.ID) int {
-	i := strings.LastIndex(string(id), "-")
-	if i < 0 {
+	s := string(id)
+	if strings.Count(s, "-") != 1 {
 		return 0
 	}
-	n, err := strconv.Atoi(string(id)[i+1:])
+	i := strings.Index(s, "-")
+	n, err := strconv.Atoi(s[i+1:])
 	if err != nil {
 		return 0
 	}

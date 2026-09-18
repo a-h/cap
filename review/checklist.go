@@ -75,6 +75,29 @@ func buildChecklist(kind model.Kind) []string {
 			"Is this concept distinct from every other concept, not the same thing under two names?",
 			"Where this concept's name appears in another entity's text as a reference, is it capitalised and tagged with this identifier, for example \"Policy (con-0001)\", so the reference is marked and can be traced? Use sentence case for a multi-word name, for example \"Capability bundle (con-0006)\".",
 		}, common...)
+	case model.KindRequirement:
+		return append([]string{
+			"Is the Statement section the requirement exactly as written in the source document, not paraphrased?",
+			"Does the identifier encode the external reference, for example req-sow-0023 for SOW-0023?",
+			"Is the source metadata field set to the document this requirement comes from?",
+			"Does each linked capability genuinely satisfy this requirement, rather than merely being related to it?",
+			"Do the linked capabilities together fully satisfy the requirement, with no gaps?",
+			"For each capability this requirement names, does that capability also name this requirement? A link declared on only one side is likely a half-deleted or forgotten relationship.",
+		}, common...)
+	case model.KindService:
+		return append([]string{
+			"Is the service name a noun phrase describing what the service is, not a verb phrase?",
+			"Does the service represent a single deployable unit, rather than a logical grouping of capabilities?",
+			"Does the Description state how this service is deployed and what role it plays in the system?",
+			"Are the capabilities listed all implemented by this service, not capabilities this service merely calls?",
+		}, common...)
+	case model.KindExternalSystem:
+		return append([]string{
+			"Is this genuinely an external system, outside the control and deployment of this project?",
+			"Is the name the commonly used product name or the name used within the organisation?",
+			"Does the Description explain what this system provides and why this project depends on it?",
+			"Is the integration mechanism described, for example a REST API, a managed SDK, or a message queue?",
+		}, common...)
 	case model.KindContext:
 		return append([]string{
 			"Is the context a noun phrase naming a domain boundary, not a verb phrase?",

@@ -33,6 +33,12 @@ func (res *LoadResult) build(kind model.Kind, id model.ID, file string, doc mark
 		m.Verification[id] = model.Verification{ID: id, Title: doc.Title, Paths: res.parsePaths(doc)}
 	case model.KindTask:
 		m.Tasks[id] = model.Task{ID: id, Title: doc.Title, Status: res.parseStatus(file, meta)}
+	case model.KindService:
+		m.Services[id] = model.Service{ID: id, Name: doc.Title, Capabilities: res.parseReferences(file, doc, SectionCapabilities)}
+	case model.KindExternalSystem:
+		m.ExternalSystems[id] = model.ExternalSystem{ID: id, Name: doc.Title}
+	case model.KindRequirement:
+		m.Requirements[id] = model.Requirement{ID: id, Title: doc.Title, Source: meta["source"], Statement: parseBody(doc, SectionStatement), Capabilities: res.parseReferences(file, doc, SectionCapabilities)}
 	default:
 		res.add(Problem{File: file, Severity: SeverityError, Message: fmt.Sprintf("unknown entity kind %q", kind)})
 		return false
@@ -52,6 +58,7 @@ func (res *LoadResult) buildCapability(id model.ID, file string, doc markdown.Do
 		Scenarios:      res.parseReferences(file, doc, SectionScenarios),
 		Verification:   res.parseVerification(id, file, doc),
 		Tasks:          res.parseReferences(file, doc, SectionTasks),
+		Requirements:   res.parseReferences(file, doc, SectionRequirements),
 	}
 }
 
@@ -213,6 +220,17 @@ func (res *LoadResult) parseReferences(file string, doc markdown.Document, secti
 		ids = append(ids, model.ID(ref).Canonical())
 	}
 	return ids
+}
+
+// parseBody returns the prose content of a section as a single string, with
+// lines joined by newlines. It returns an empty string when the section is
+// absent or contains no prose.
+func parseBody(doc markdown.Document, section string) string {
+	sec, ok := doc.FindSection(section)
+	if !ok || len(sec.Prose) == 0 {
+		return ""
+	}
+	return strings.Join(sec.Prose, "\n")
 }
 
 // parsePaths reads the Paths section as a list of file paths.
