@@ -158,6 +158,7 @@ func TestReference(t *testing.T) {
 		{name: "an identifier followed by description is extracted", text: "REQ-001 Policies must be evaluated consistently", wantID: "REQ-001", wantOK: true},
 		{name: "a verification identifier with a type prefix is extracted", text: "UNIT-042", wantID: "UNIT-042", wantOK: true},
 		{name: "an identifier in a markdown link is extracted from the URL when the label has no identifier", text: "[An entity has a canonical identifier](../invariants/inv-0002-an-entity-has-a-canonical-identifier.md)", wantID: "inv-0002", wantOK: true},
+		{name: "a compound identifier such as req-sow-0053 is extracted", text: "[req-sow-0053](../requirements/req-sow-0053-some-title.md)", wantID: "req-sow-0053", wantOK: true},
 		{name: "an item without an identifier reports not ok", text: "see the related work", wantOK: false},
 	}
 	for _, tt := range tests {

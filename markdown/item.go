@@ -5,10 +5,10 @@ import (
 	"strings"
 )
 
-// idPattern matches an entity identifier such as cap-0003 or unit-0042. The
-// prefix is one or more letters of any case, followed by a hyphen and a number.
-// The identifier is canonicalised by the caller.
-var idPattern = regexp.MustCompile(`\b([A-Za-z][A-Za-z0-9]*-[0-9]+)\b`)
+// idPattern matches an entity identifier such as cap-0003 or req-sow-0053. The
+// prefix is one or more word segments separated by hyphens, followed by a
+// numeric suffix. The identifier is canonicalised by the caller.
+var idPattern = regexp.MustCompile(`\b([A-Za-z][A-Za-z0-9]*(?:-[A-Za-z][A-Za-z0-9]*)*-[0-9]+)\b`)
 
 // KeyValue splits a metadata item of the form "key: value" into its parts. It
 // reports ok=false when the item does not contain a colon-separated key.

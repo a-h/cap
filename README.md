@@ -68,9 +68,17 @@ source against the model.
 | Scenario | a workflow that crosses several capabilities |
 | ADR | an architectural decision that constrains how capabilities are implemented |
 | Task | a unit of work |
+| Requirement | a contractual or regulatory obligation from an external source, linked to the capabilities that fulfil it |
+| External system | a third-party or out-of-boundary system that this system depends on or integrates with |
+| Service | a deployable unit that implements one or more capabilities |
 
 An identifier is a lowercase prefix and a number: `ctx-0001`, `con-0001`, `cap-0003`,
-`inv-0001`, `spec-0012`, `ver-0001`, `scn-0001`, `adr-0001`, `task-0341`.
+`inv-0001`, `spec-0012`, `ver-0001`, `scn-0001`, `adr-0001`, `task-0341`, `req-0001`,
+`ext-0001`, `svc-0001`.
+
+Requirement identifiers encode the external reference. `cap new requirement "SOW-0023"`
+produces `req-sow-0023.md`, keeping the source document's numbering visible in the
+identifier.
 
 A concept names a thing in the domain, a noun the capabilities act on. A capability
 names an ability, a verb on one of those things. Defining the concepts of a context
@@ -98,7 +106,10 @@ Bounded context ──────────────────▶ Specif
               ──▶ Verification       evidence the invariants hold
               ──▶ ADR, Task          a decision, a unit of work
 
-Scenario ──▶ Capability, Capability  a workflow across capabilities
+Scenario     ──▶ Capability, ...     a workflow across capabilities
+Requirement  ──▶ Capability, ...     the obligations a capability fulfils
+Service      ──▶ Capability, ...     the deployable unit that implements them
+External system                      a dependency outside the boundary
 ```
 
 A concept is referenced by name in the prose of the entities that use it. Tag the
@@ -128,6 +139,9 @@ to the nearest equivalent in each framework; "—" means no direct equivalent.
 | Verification    | —                          | Test Evidence             | Definition of Done  | —                   |
 | ADR             | Architecture Standard (A8) | —                         | —                   | —                   |
 | Task            | —                          | Story / Task              | Task                | —                   |
+| Requirement     | Capability (C1) / need     | —                         | —                   | —                   |
+| External system | System (Pr)                | —                         | —                   | —                   |
+| Service         | Service (S1)               | Component                 | —                   | Service             |
 
 **No cap equivalent:** NATO NAF's Service (S) and Physical/Resource (P) families cover
 service interfaces, systems, and deployment; NAF also carries effects (C5), performance
@@ -166,6 +180,9 @@ cap/
 ├── verification/
 ├── adrs/
 ├── tasks/
+├── requirements/
+├── external-systems/
+├── services/
 └── .templates/
 ```
 
