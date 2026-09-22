@@ -23,6 +23,7 @@ var kindDefs = []kindDef{
 	{Name: "verification", Color: "#7aad4a"},
 	{Name: "adr", Color: "#c07840"},
 	{Name: "task", Color: "#888888"},
+	{Name: "requirement", Color: "#c85c9a"},
 }
 
 func Layout() templ.Component {

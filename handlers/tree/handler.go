@@ -34,6 +34,7 @@ func (h Handler) Get(w http.ResponseWriter, r *http.Request) {
 var defaultKinds = map[string]bool{
 	"context": true, "capability": true, "concept": true, "invariant": true,
 	"scenario": true, "specification": true, "verification": true, "adr": true, "task": true,
+	"requirement": true,
 }
 
 func parseKinds(raw string) map[string]bool {
@@ -74,6 +75,7 @@ func kindColor(kind string) string {
 		"verification":  "#7aad4a",
 		"adr":           "#c07840",
 		"task":          "#888888",
+		"requirement":   "#c85c9a",
 	}
 	if c, ok := colors[kind]; ok {
 		return c
@@ -199,6 +201,17 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 					Parent: string(capID),
 				})
 			}
+			for _, reqID := range cap.Requirements {
+				req := m.Requirements[reqID]
+				capKids = append(capKids, Row{
+					ID:     string(reqID),
+					Kind:   "requirement",
+					Title:  req.Title,
+					Color:  kindColor("requirement"),
+					Depth:  2,
+					Parent: string(capID),
+				})
+			}
 			capRow.HasKids = len(capKids) > 0
 			children = append(children, capRow)
 			children = append(children, capKids...)
@@ -213,6 +226,41 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 		}
 		rows = append(rows, ctxRow)
 		rows = append(rows, children...)
+	}
+
+	// Requirements as top-level items.
+	if activeKinds["requirement"] {
+		reqIDs := sortedIDs(m.Requirements)
+		for _, reqID := range reqIDs {
+			req := m.Requirements[reqID]
+			reqRow := Row{
+				ID:    string(reqID),
+				Kind:  "requirement",
+				Title: req.Title,
+				Color: kindColor("requirement"),
+				Depth: 0,
+			}
+			var reqKids []Row
+			for _, capID := range req.Capabilities {
+				cap := m.Capabilities[capID]
+				reqKids = append(reqKids, Row{
+					ID:     string(capID),
+					Kind:   "capability",
+					Title:  cap.Name,
+					Status: string(cap.Status),
+					Color:  kindColor("capability"),
+					Depth:  1,
+					Parent: string(reqID),
+					Shared: true,
+				})
+			}
+			reqRow.HasKids = len(reqKids) > 0
+			if q != "" && !rowMatchesQuery(reqRow, q) && !anyChildMatches(reqKids, q) {
+				continue
+			}
+			rows = append(rows, reqRow)
+			rows = append(rows, reqKids...)
+		}
 	}
 
 	// Scenarios as top-level items.
@@ -295,6 +343,12 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 			for _, id := range sortedIDs(m.Tasks) {
 				task := m.Tasks[id]
 				rows = append(rows, Row{ID: string(id), Kind: "task", Title: task.Title, Status: string(task.Status), Color: kindColor("task")})
+			}
+		}
+		if activeKinds["requirement"] {
+			for _, id := range sortedIDs(m.Requirements) {
+				req := m.Requirements[id]
+				rows = append(rows, Row{ID: string(id), Kind: "requirement", Title: req.Title, Color: kindColor("requirement")})
 			}
 		}
 	}

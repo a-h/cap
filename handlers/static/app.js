@@ -21,6 +21,7 @@ const KIND_COLORS = {
 	verification:  '#7aad4a',
 	adr:           '#c07840',
 	task:          '#888888',
+	requirement:   '#c85c9a',
 };
 const STATUS_COLORS = {
 	done:          '#3daa6e',

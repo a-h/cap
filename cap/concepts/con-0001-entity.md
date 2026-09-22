@@ -8,8 +8,9 @@
 
 A documented thing of one kind, written as a single Markdown file with a heading for
 each section its kind needs. The kinds are bounded context, concept, capability,
-invariant, specification, verification, scenario, ADR, and task. An entity carries an
-Identifier (con-0002) and links to other entities through References (con-0003).
+invariant, specification, verification, scenario, ADR, task, requirement (con-0008),
+service (con-0009), and external system (con-0010). An entity carries an Identifier
+(con-0002) and links to other entities through References (con-0003).
 
 ## States
 

@@ -164,6 +164,9 @@ func buildEdges(m *model.Model) edgeIndex {
 		for _, id := range cap.Tasks {
 			idx.add(cap.ID, id)
 		}
+		for _, id := range cap.Requirements {
+			idx.add(cap.ID, id)
+		}
 	}
 	for _, con := range m.Concepts {
 		if con.Context != "" {
@@ -178,6 +181,11 @@ func buildEdges(m *model.Model) edgeIndex {
 	for _, scn := range m.Scenarios {
 		for _, id := range scn.Capabilities {
 			idx.add(scn.ID, id)
+		}
+	}
+	for _, req := range m.Requirements {
+		for _, id := range req.Capabilities {
+			idx.add(req.ID, id)
 		}
 	}
 	return idx
@@ -211,6 +219,9 @@ func lookupEntity(m *model.Model, id model.ID) (kind, title, status string) {
 	if e, ok := m.Tasks[id]; ok {
 		return "task", e.Title, string(e.Status)
 	}
+	if e, ok := m.Requirements[id]; ok {
+		return "requirement", e.Title, ""
+	}
 	return "", "", ""
 }
 
@@ -241,6 +252,7 @@ func kindColor(kind string) string {
 		"verification":  "#7aad4a",
 		"adr":           "#c07840",
 		"task":          "#888888",
+		"requirement":   "#c85c9a",
 	}
 	if c, ok := colors[kind]; ok {
 		return c
