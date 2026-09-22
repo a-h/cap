@@ -2,6 +2,8 @@
 
 `cap` documents a software system's functionality and behaviour, and reports on it.
 
+![diagram](cap.png)
+
 It is two things:
 
 - A standard for documenting a system as structured Markdown files in a simple
