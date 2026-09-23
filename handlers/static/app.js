@@ -376,6 +376,16 @@ function exportGraphPNG() {
 	img.src = url;
 }
 
+// ── Table row clicks ───────────────────────────────────────────────────────
+document.getElementById('table-body').addEventListener('click', function(e) {
+	const cell = e.target.closest('td[data-id]');
+	if (!cell) return;
+	const id = cell.dataset.id;
+	gSelId = id;
+	updateGraphSel();
+	panToNode(id);
+});
+
 // ── Table copy ─────────────────────────────────────────────────────────────
 document.getElementById('btn-copy-table').addEventListener('click', async function() {
 	const btn = this;

@@ -1,6 +1,7 @@
 package table
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/a-h/cap/graph"
@@ -22,9 +23,20 @@ templ Table(fromKind, toKind string, groups []graph.Group) {
 					for i, to := range g.ToRows {
 						<tr>
 							if i == 0 {
-								<td rowspan={ strconv.Itoa(len(g.ToRows)) }><span class="rel-id">{ g.FromID }</span> { g.FromTitle }</td>
+								<td
+									rowspan={ strconv.Itoa(len(g.ToRows)) }
+									data-id={ g.FromID }
+									hx-get={ fmt.Sprintf("/entities/%s", g.FromID) }
+									hx-target="#detail-panel"
+									hx-swap="innerHTML"
+								><span class="rel-id">{ g.FromID }</span> { g.FromTitle }</td>
 							}
-							<td><span class="rel-id">{ to.ToID }</span> { to.ToTitle }</td>
+							<td
+								data-id={ to.ToID }
+								hx-get={ fmt.Sprintf("/entities/%s", to.ToID) }
+								hx-target="#detail-panel"
+								hx-swap="innerHTML"
+							><span class="rel-id">{ to.ToID }</span> { to.ToTitle }</td>
 						</tr>
 					}
 				</tbody>

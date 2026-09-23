@@ -2,6 +2,14 @@ package entities
 
 templ Detail(view EntityView) {
 	<div id="detail-inner">
+		if view.BackID != "" {
+			<button
+				class="gbtn btn-back"
+				hx-get={ "/entities/" + view.BackID }
+				hx-target="#detail-panel"
+				hx-swap="innerHTML"
+			>← Back</button>
+		}
 		<div id="dh">
 			<div id="dh-id">{ view.ID }</div>
 			<div id="dh-title">{ view.Title }</div>
@@ -24,7 +32,7 @@ templ Detail(view EntityView) {
 					<div class="ds">
 						<h3>Links to</h3>
 						for _, rel := range view.LinksTo {
-							@relationship(rel)
+							@relationship(rel, view.ID)
 						}
 					</div>
 				}
@@ -32,7 +40,7 @@ templ Detail(view EntityView) {
 					<div class="ds">
 						<h3>Linked by</h3>
 						for _, rel := range view.LinkedBy {
-							@relationship(rel)
+							@relationship(rel, view.ID)
 						}
 					</div>
 				}
@@ -41,10 +49,10 @@ templ Detail(view EntityView) {
 	</div>
 }
 
-templ relationship(rel RelLink) {
+templ relationship(rel RelLink, backID string) {
 	<div
 		class="dr"
-		hx-get={ "/entities/" + rel.ID }
+		hx-get={ "/entities/" + rel.ID + "?back=" + backID }
 		hx-target="#detail-panel"
 		hx-swap="innerHTML"
 	>

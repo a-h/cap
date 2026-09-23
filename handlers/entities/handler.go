@@ -33,7 +33,7 @@ func (h Handler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	view, err := newEntityView(res, id)
+	view, err := newEntityView(res, id, r.URL.Query().Get("back"))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -77,6 +77,7 @@ type EntityView struct {
 	FileContent string
 	LinksTo     []RelLink
 	LinkedBy    []RelLink
+	BackID      string
 }
 
 // RelLink is one entry in the links-to or linked-by section.
@@ -87,7 +88,7 @@ type RelLink struct {
 	Color string
 }
 
-func newEntityView(res store.LoadResult, id model.ID) (EntityView, error) {
+func newEntityView(res store.LoadResult, id model.ID, backID string) (EntityView, error) {
 	m := res.Model
 	kind, title, status := lookupEntity(m, id)
 	if kind == "" {
@@ -120,6 +121,7 @@ func newEntityView(res store.LoadResult, id model.ID) (EntityView, error) {
 		FileContent: content,
 		LinksTo:     linksTo,
 		LinkedBy:    linkedBy,
+		BackID:      backID,
 	}, nil
 }
 

@@ -194,7 +194,10 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 .rel-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; border-right: 1px solid var(--border); }
 .rel-table td:last-child { border-right: none; }
+.rel-table td[data-id] { cursor: pointer; }
+.rel-table td[data-id]:hover { background: var(--surface2); }
 .rel-group:hover td { background: var(--surface2); }
+.btn-back { margin: 8px 12px 4px; }
 .rel-id  { font-family: monospace; font-size: 11px; color: var(--muted); margin-right: 5px; }
 .tbl-empty { color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; }
 .gbtn {
