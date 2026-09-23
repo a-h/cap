@@ -154,9 +154,49 @@ html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(-
 }
 
 /* ── Graph panel ── */
-#graph-panel { position: relative; overflow: hidden; }
-#graph-svg   { width: 100%; height: 100%; display: block; }
+#graph-panel { display: flex; flex-direction: column; overflow: hidden; }
+
+#panel-tabs  { flex-shrink: 0; display: flex; background: var(--surface); border-bottom: 1px solid var(--border); }
+.ptab {
+	padding: 8px 16px; background: none; border: none; border-bottom: 2px solid transparent;
+	color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; margin-bottom: -1px;
+}
+.ptab:hover { color: var(--fg); }
+.ptab.active { color: var(--fg); border-bottom-color: var(--accent); }
+
+#graph-view  { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+#graph-svg   { flex: 1; width: 100%; display: block; }
 #graph-btns  { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 6px; }
+
+#table-view  { flex: 1; display: none; flex-direction: column; overflow: hidden; position: relative; }
+#graph-panel.show-table #graph-view  { display: none; }
+#graph-panel.show-table #table-view  { display: flex; }
+#table-btns  { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 6px; }
+
+#table-controls {
+	flex-shrink: 0; padding: 10px 14px; border-bottom: 1px solid var(--border);
+	display: flex; flex-direction: column; gap: 8px; background: var(--surface);
+}
+.tctrl-row   { display: flex; align-items: center; gap: 8px; }
+.tctrl-label {
+	font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em;
+	color: var(--muted); width: 32px; flex-shrink: 0;
+}
+.tctrl-chips { display: flex; gap: 4px; flex-wrap: wrap; }
+
+#table-body  { flex: 1; overflow-y: auto; padding: 12px 14px; }
+
+.rel-table   { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rel-table th {
+	text-align: left; padding: 6px 10px; background: var(--surface);
+	border-bottom: 2px solid var(--border); font-size: 11px; font-weight: 600;
+	text-transform: uppercase; letter-spacing: .07em; color: var(--muted); white-space: nowrap;
+}
+.rel-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); vertical-align: top; border-right: 1px solid var(--border); }
+.rel-table td:last-child { border-right: none; }
+.rel-group:hover td { background: var(--surface2); }
+.rel-id  { font-family: monospace; font-size: 11px; color: var(--muted); margin-right: 5px; }
+.tbl-empty { color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; }
 .gbtn {
 	padding: 6px 13px; background: var(--surface); border: 1px solid var(--border);
 	border-radius: 6px; color: var(--fg); font-size: 13px; cursor: pointer;

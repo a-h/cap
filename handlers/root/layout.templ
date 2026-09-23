@@ -16,6 +16,8 @@ var kindDefs = []kindDef{
 	{Name: "adr", Color: "#c07840"},
 	{Name: "task", Color: "#888888"},
 	{Name: "requirement", Color: "#c85c9a"},
+	{Name: "service", Color: "#5ba3d4"},
+	{Name: "external-system", Color: "#d48c3d"},
 }
 
 templ Layout() {
@@ -74,10 +76,42 @@ templ Layout() {
 						></div>
 					</div>
 					<div id="graph-panel">
-						<svg id="graph-svg"></svg>
-						<div id="graph-btns">
-							<button class="gbtn" id="btn-fit">Fit</button>
-							<button class="gbtn" id="btn-rst">Reset</button>
+						<div id="panel-tabs">
+							<button class="ptab" id="tab-graph" data-tab="graph">Graph</button>
+							<button class="ptab" id="tab-table" data-tab="table">Table</button>
+						</div>
+						<div id="graph-view">
+							<svg id="graph-svg"></svg>
+							<div id="graph-btns">
+								<button class="gbtn" id="btn-fit">Fit</button>
+								<button class="gbtn" id="btn-rst">Reset</button>
+								<button class="gbtn" id="btn-svg">SVG</button>
+								<button class="gbtn" id="btn-png">PNG</button>
+							</div>
+						</div>
+						<div id="table-view">
+							<div id="table-controls">
+								<div class="tctrl-row">
+									<span class="tctrl-label">From</span>
+									<div id="from-chips" class="tctrl-chips"></div>
+									<input type="hidden" id="from-kind" name="from" value="requirement"/>
+								</div>
+								<div class="tctrl-row">
+									<span class="tctrl-label">To</span>
+									<div id="to-chips" class="tctrl-chips"></div>
+									<input type="hidden" id="to-kind" name="to" value="capability"/>
+								</div>
+							</div>
+							<div
+								id="table-body"
+								hx-get="/table"
+								hx-trigger="load, tablechange from:body"
+								hx-include="#from-kind,#to-kind"
+								hx-swap="innerHTML"
+							></div>
+							<div id="table-btns">
+								<button class="gbtn" id="btn-copy-table">Copy</button>
+							</div>
 						</div>
 					</div>
 					<div id="detail-panel"></div>

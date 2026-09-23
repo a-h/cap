@@ -34,7 +34,7 @@ func (h Handler) Get(w http.ResponseWriter, r *http.Request) {
 var defaultKinds = map[string]bool{
 	"context": true, "capability": true, "concept": true, "invariant": true,
 	"scenario": true, "specification": true, "verification": true, "adr": true, "task": true,
-	"requirement": true,
+	"requirement": true, "service": true, "external-system": true,
 }
 
 func parseKinds(raw string) map[string]bool {
@@ -66,16 +66,18 @@ type Row struct {
 
 func kindColor(kind string) string {
 	colors := map[string]string{
-		"context":       "#4a7fd4",
-		"capability":    "#3daa6e",
-		"concept":       "#d4a535",
-		"invariant":     "#e05c5c",
-		"scenario":      "#9a6dd4",
-		"specification": "#3db8c8",
-		"verification":  "#7aad4a",
-		"adr":           "#c07840",
-		"task":          "#888888",
-		"requirement":   "#c85c9a",
+		"context":         "#4a7fd4",
+		"capability":      "#3daa6e",
+		"concept":         "#d4a535",
+		"invariant":       "#e05c5c",
+		"scenario":        "#9a6dd4",
+		"specification":   "#3db8c8",
+		"verification":    "#7aad4a",
+		"adr":             "#c07840",
+		"task":            "#888888",
+		"requirement":     "#c85c9a",
+		"service":         "#5ba3d4",
+		"external-system": "#d48c3d",
 	}
 	if c, ok := colors[kind]; ok {
 		return c
@@ -201,17 +203,6 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 					Parent: string(capID),
 				})
 			}
-			for _, reqID := range cap.Requirements {
-				req := m.Requirements[reqID]
-				capKids = append(capKids, Row{
-					ID:     string(reqID),
-					Kind:   "requirement",
-					Title:  req.Title,
-					Color:  kindColor("requirement"),
-					Depth:  2,
-					Parent: string(capID),
-				})
-			}
 			capRow.HasKids = len(capKids) > 0
 			children = append(children, capRow)
 			children = append(children, capKids...)
@@ -295,6 +286,60 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 			}
 			rows = append(rows, scnRow)
 			rows = append(rows, scnKids...)
+		}
+	}
+
+	// Services as top-level items.
+	if activeKinds["service"] {
+		svcIDs := sortedIDs(m.Services)
+		for _, svcID := range svcIDs {
+			svc := m.Services[svcID]
+			svcRow := Row{
+				ID:    string(svcID),
+				Kind:  "service",
+				Title: svc.Name,
+				Color: kindColor("service"),
+				Depth: 0,
+			}
+			var svcKids []Row
+			for _, capID := range svc.Capabilities {
+				cap := m.Capabilities[capID]
+				svcKids = append(svcKids, Row{
+					ID:     string(capID),
+					Kind:   "capability",
+					Title:  cap.Name,
+					Status: string(cap.Status),
+					Color:  kindColor("capability"),
+					Depth:  1,
+					Parent: string(svcID),
+					Shared: true,
+				})
+			}
+			svcRow.HasKids = len(svcKids) > 0
+			if q != "" && !rowMatchesQuery(svcRow, q) && !anyChildMatches(svcKids, q) {
+				continue
+			}
+			rows = append(rows, svcRow)
+			rows = append(rows, svcKids...)
+		}
+	}
+
+	// External systems as top-level items.
+	if activeKinds["external-system"] {
+		extIDs := sortedIDs(m.ExternalSystems)
+		for _, extID := range extIDs {
+			ext := m.ExternalSystems[extID]
+			extRow := Row{
+				ID:    string(extID),
+				Kind:  "external-system",
+				Title: ext.Name,
+				Color: kindColor("external-system"),
+				Depth: 0,
+			}
+			if q != "" && !rowMatchesQuery(extRow, q) {
+				continue
+			}
+			rows = append(rows, extRow)
 		}
 	}
 

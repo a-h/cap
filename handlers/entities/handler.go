@@ -188,6 +188,11 @@ func buildEdges(m *model.Model) edgeIndex {
 			idx.add(req.ID, id)
 		}
 	}
+	for _, svc := range m.Services {
+		for _, id := range svc.Capabilities {
+			idx.add(svc.ID, id)
+		}
+	}
 	return idx
 }
 
@@ -222,6 +227,12 @@ func lookupEntity(m *model.Model, id model.ID) (kind, title, status string) {
 	if e, ok := m.Requirements[id]; ok {
 		return "requirement", e.Title, ""
 	}
+	if e, ok := m.Services[id]; ok {
+		return "service", e.Name, ""
+	}
+	if e, ok := m.ExternalSystems[id]; ok {
+		return "external-system", e.Name, ""
+	}
 	return "", "", ""
 }
 
@@ -243,16 +254,18 @@ func resolveFilePath(res store.LoadResult, id model.ID) string {
 
 func kindColor(kind string) string {
 	colors := map[string]string{
-		"context":       "#4a7fd4",
-		"capability":    "#3daa6e",
-		"concept":       "#d4a535",
-		"invariant":     "#e05c5c",
-		"scenario":      "#9a6dd4",
-		"specification": "#3db8c8",
-		"verification":  "#7aad4a",
-		"adr":           "#c07840",
-		"task":          "#888888",
-		"requirement":   "#c85c9a",
+		"context":         "#4a7fd4",
+		"capability":      "#3daa6e",
+		"concept":         "#d4a535",
+		"invariant":       "#e05c5c",
+		"scenario":        "#9a6dd4",
+		"specification":   "#3db8c8",
+		"verification":    "#7aad4a",
+		"adr":             "#c07840",
+		"task":            "#888888",
+		"requirement":     "#c85c9a",
+		"service":         "#5ba3d4",
+		"external-system": "#d48c3d",
 	}
 	if c, ok := colors[kind]; ok {
 		return c

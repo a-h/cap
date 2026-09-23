@@ -1,0 +1,34 @@
+package table
+
+import (
+	"strconv"
+
+	"github.com/a-h/cap/graph"
+)
+
+templ Table(fromKind, toKind string, groups []graph.Group) {
+	if len(groups) == 0 {
+		<p class="tbl-empty">No relationships found between { fromKind } and { toKind }.</p>
+	} else {
+		<table class="rel-table">
+			<thead>
+				<tr>
+					<th>{ fromKind }</th>
+					<th>{ toKind }</th>
+				</tr>
+			</thead>
+			for _, g := range groups {
+				<tbody class="rel-group">
+					for i, to := range g.ToRows {
+						<tr>
+							if i == 0 {
+								<td rowspan={ strconv.Itoa(len(g.ToRows)) }><span class="rel-id">{ g.FromID }</span> { g.FromTitle }</td>
+							}
+							<td><span class="rel-id">{ to.ToID }</span> { to.ToTitle }</td>
+						</tr>
+					}
+				</tbody>
+			}
+		</table>
+	}
+}

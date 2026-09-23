@@ -12,16 +12,18 @@ applyTheme(localStorage.getItem('cap-theme') || 'cap');
 
 // ── Kind chips ─────────────────────────────────────────────────────────────
 const KIND_COLORS = {
-	context:       '#4a7fd4',
-	capability:    '#3daa6e',
-	concept:       '#d4a535',
-	invariant:     '#e05c5c',
-	scenario:      '#9a6dd4',
-	specification: '#3db8c8',
-	verification:  '#7aad4a',
-	adr:           '#c07840',
-	task:          '#888888',
-	requirement:   '#c85c9a',
+	context:           '#4a7fd4',
+	capability:        '#3daa6e',
+	concept:           '#d4a535',
+	invariant:         '#e05c5c',
+	scenario:          '#9a6dd4',
+	specification:     '#3db8c8',
+	verification:      '#7aad4a',
+	adr:               '#c07840',
+	task:              '#888888',
+	requirement:       '#c85c9a',
+	service:           '#5ba3d4',
+	'external-system': '#d48c3d',
 };
 const STATUS_COLORS = {
 	done:          '#3daa6e',
@@ -167,6 +169,8 @@ async function initGraph() {
 	document.getElementById('btn-rst').onclick = function() {
 		d3.select(svgEl).transition().duration(400).call(gZoom.transform, d3.zoomIdentity);
 	};
+	document.getElementById('btn-svg').onclick = exportGraphSVG;
+	document.getElementById('btn-png').onclick = exportGraphPNG;
 }
 
 function updateGraphSel() {
@@ -312,6 +316,140 @@ document.body.addEventListener('htmx:afterSwap', function(e) {
 		applyExpanded();
 	}
 });
+
+// ── Graph export (SVG / PNG) ───────────────────────────────────────────────
+function buildExportSVG() {
+	const svgEl = document.getElementById('graph-svg');
+	const W = svgEl.clientWidth, H = svgEl.clientHeight;
+	const cs = getComputedStyle(document.documentElement);
+	const bg     = cs.getPropertyValue('--bg').trim();
+	const border = cs.getPropertyValue('--border').trim();
+	const muted  = cs.getPropertyValue('--muted').trim();
+	const accent = cs.getPropertyValue('--accent').trim();
+
+	const clone = svgEl.cloneNode(true);
+	clone.setAttribute('width', W);
+	clone.setAttribute('height', H);
+	clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+	// Fix marker: context-stroke doesn't resolve outside the live document.
+	const arrPath = clone.querySelector('#arr path');
+	if (arrPath) arrPath.setAttribute('fill', border);
+
+	// Embed resolved styles so the file renders without the page stylesheet.
+	const styleEl = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+	styleEl.textContent =
+		'.glink{stroke:' + border + ';stroke-width:1.5;stroke-opacity:.65;fill:none;marker-end:url(#arr)}' +
+		'.glink.hi{stroke:' + accent + ';stroke-opacity:1;stroke-width:2.5}' +
+		'.glink.dim{stroke-opacity:.08}' +
+		'.gnode circle{stroke-width:2}' +
+		'.gnode.sel circle{stroke-width:4}' +
+		'.gnode.dim{opacity:.15}' +
+		'text{fill:' + muted + ';font-family:system-ui,-apple-system,sans-serif}';
+	clone.insertBefore(styleEl, clone.firstChild);
+
+	// Background rect inserted after the style block.
+	const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+	bgRect.setAttribute('width', W);
+	bgRect.setAttribute('height', H);
+	bgRect.setAttribute('fill', bg);
+	clone.insertBefore(bgRect, styleEl.nextSibling);
+
+	return new XMLSerializer().serializeToString(clone);
+}
+
+function downloadBlob(blob, filename) {
+	const a = document.createElement('a');
+	a.href = URL.createObjectURL(blob);
+	a.download = filename;
+	a.click();
+	URL.revokeObjectURL(a.href);
+}
+
+function exportGraphSVG() {
+	downloadBlob(new Blob([buildExportSVG()], {type: 'image/svg+xml'}), 'graph.svg');
+}
+
+function exportGraphPNG() {
+	const svgEl = document.getElementById('graph-svg');
+	const W = svgEl.clientWidth, H = svgEl.clientHeight;
+	const dpr = window.devicePixelRatio || 1;
+	const url = URL.createObjectURL(new Blob([buildExportSVG()], {type: 'image/svg+xml'}));
+	const img = new Image();
+	img.onload = function() {
+		const canvas = document.createElement('canvas');
+		canvas.width  = W * dpr;
+		canvas.height = H * dpr;
+		const ctx = canvas.getContext('2d');
+		ctx.scale(dpr, dpr);
+		ctx.drawImage(img, 0, 0);
+		URL.revokeObjectURL(url);
+		canvas.toBlob(function(blob) { downloadBlob(blob, 'graph.png'); }, 'image/png');
+	};
+	img.src = url;
+}
+
+// ── Table copy ─────────────────────────────────────────────────────────────
+document.getElementById('btn-copy-table').addEventListener('click', async function() {
+	const btn = this;
+	const table = document.querySelector('#table-body table');
+	if (!table) { btn.textContent = 'Nothing to copy'; setTimeout(function() { btn.textContent = 'Copy'; }, 1500); return; }
+	try {
+		await navigator.clipboard.write([new ClipboardItem({
+			'text/html': new Blob([table.outerHTML], {type: 'text/html'}),
+		})]);
+		btn.textContent = 'Copied';
+	} catch (e) {
+		const range = document.createRange();
+		range.selectNode(table);
+		const sel = window.getSelection();
+		sel.removeAllRanges();
+		sel.addRange(range);
+		btn.textContent = 'Selected';
+	}
+	setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+});
+
+// ── Panel tabs (Graph / Table) ─────────────────────────────────────────────
+document.querySelectorAll('.ptab').forEach(function(tab) {
+	tab.addEventListener('click', function() {
+		const isTable = tab.dataset.tab === 'table';
+		document.querySelectorAll('.ptab').forEach(function(t) {
+			t.classList.toggle('active', t.dataset.tab === tab.dataset.tab);
+		});
+		document.getElementById('graph-panel').classList.toggle('show-table', isTable);
+		if (!isTable) {
+			fitGraph();
+		}
+	});
+});
+document.getElementById('tab-graph').classList.add('active');
+
+// ── Table from/to chips ────────────────────────────────────────────────────
+function buildRadioChips(containerId, hiddenId, initialKind) {
+	const container = document.getElementById(containerId);
+	const hidden = document.getElementById(hiddenId);
+	hidden.value = initialKind;
+	Object.entries(KIND_COLORS).forEach(function(entry) {
+		const k = entry[0], c = entry[1];
+		const chip = document.createElement('span');
+		chip.className = 'kind-chip' + (k === initialKind ? '' : ' off');
+		chip.dataset.kind = k;
+		chip.style.cssText = 'background:' + c + '20;border-color:' + c + ';color:' + c;
+		chip.innerHTML = '<span class="dot" style="background:' + c + '"></span>' + k;
+		chip.addEventListener('click', function() {
+			container.querySelectorAll('.kind-chip').forEach(function(el) {
+				el.classList.toggle('off', el.dataset.kind !== k);
+			});
+			hidden.value = k;
+			htmx.trigger(document.body, 'tablechange');
+		});
+		container.appendChild(chip);
+	});
+}
+
+buildRadioChips('from-chips', 'from-kind', 'requirement');
+buildRadioChips('to-chips', 'to-kind', 'capability');
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 initGraph();
