@@ -181,6 +181,10 @@ func Build(m *model.Model) Data {
 		n := m.Requirements[id]
 		a.addNode(string(id), "requirement", n.Title)
 	}
+	for _, id := range sortedIDs(m.Teams) {
+		n := m.Teams[id]
+		a.addNode(string(id), "team", n.Name)
+	}
 
 	for _, id := range sortedIDs(m.Capabilities) {
 		cap := m.Capabilities[id]
@@ -229,8 +233,17 @@ func Build(m *model.Model) Data {
 	}
 	for _, id := range sortedIDs(m.Services) {
 		svc := m.Services[id]
+		if svc.Team != "" {
+			a.addEdge(string(svc.Team), string(id))
+		}
 		for _, x := range svc.Capabilities {
 			a.addEdge(string(id), string(x))
+		}
+	}
+	for _, id := range sortedIDs(m.Teams) {
+		team := m.Teams[id]
+		if team.Parent != "" {
+			a.addEdge(string(team.Parent), string(id))
 		}
 	}
 	for _, id := range sortedIDs(m.Requirements) {

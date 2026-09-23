@@ -26,6 +26,7 @@ var prefixForKind = map[model.Kind]string{
 	model.KindService:        "svc",
 	model.KindExternalSystem: "ext",
 	model.KindRequirement:    "req",
+	model.KindTeam:           "team",
 }
 
 // optionalHeading matches a heading whose title ends with the optional marker, so

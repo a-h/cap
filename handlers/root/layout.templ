@@ -1,23 +1,22 @@
 package root
 
-type kindDef struct {
-	Name  string
-	Color string
-}
-
-var kindDefs = []kindDef{
-	{Name: "context", Color: "#4a7fd4"},
-	{Name: "capability", Color: "#3daa6e"},
-	{Name: "concept", Color: "#d4a535"},
-	{Name: "invariant", Color: "#e05c5c"},
-	{Name: "scenario", Color: "#9a6dd4"},
-	{Name: "specification", Color: "#3db8c8"},
-	{Name: "verification", Color: "#7aad4a"},
-	{Name: "adr", Color: "#c07840"},
-	{Name: "task", Color: "#888888"},
-	{Name: "requirement", Color: "#c85c9a"},
-	{Name: "service", Color: "#5ba3d4"},
-	{Name: "external-system", Color: "#d48c3d"},
+// kindDefs maps each entity kind name to its display color. It is the single
+// source of truth: templ.JSONScript embeds it in the page so app.js can read it
+// without duplicating the data.
+var kindDefs = map[string]string{
+	"context":         "#4a7fd4",
+	"capability":      "#3daa6e",
+	"concept":         "#d4a535",
+	"invariant":       "#e05c5c",
+	"scenario":        "#9a6dd4",
+	"specification":   "#3db8c8",
+	"verification":    "#7aad4a",
+	"adr":             "#c07840",
+	"task":            "#888888",
+	"requirement":     "#c85c9a",
+	"service":         "#5ba3d4",
+	"external-system": "#d48c3d",
+	"team":            "#3da89a",
 }
 
 templ Layout() {
@@ -32,6 +31,7 @@ templ Layout() {
 			<script src="/static/vendor/htmx.min.js"></script>
 			<script src="/static/vendor/d3.v7.min.js"></script>
 			<script src="/static/vendor/vs/loader.js"></script>
+			@templ.JSONScript("cap-kind-defs", kindDefs)
 		</head>
 		<body>
 			<div id="app">

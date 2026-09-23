@@ -140,6 +140,9 @@ func allIDs(m *model.Model) []model.ID {
 	for id := range m.Requirements {
 		out = append(out, id)
 	}
+	for id := range m.Teams {
+		out = append(out, id)
+	}
 	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
 	return out
 }
@@ -159,14 +162,21 @@ func topLevelIDs(m *model.Model) []model.ID {
 			out = append(out, id)
 		}
 	}
-	for id := range m.Services {
-		out = append(out, id)
+	for id, s := range m.Services {
+		if s.Team == "" {
+			out = append(out, id)
+		}
 	}
 	for id := range m.ExternalSystems {
 		out = append(out, id)
 	}
 	for id := range m.Requirements {
 		out = append(out, id)
+	}
+	for id, t := range m.Teams {
+		if t.Parent == "" {
+			out = append(out, id)
+		}
 	}
 	return out
 }

@@ -34,7 +34,7 @@ func (h Handler) Get(w http.ResponseWriter, r *http.Request) {
 var defaultKinds = map[string]bool{
 	"context": true, "capability": true, "concept": true, "invariant": true,
 	"scenario": true, "specification": true, "verification": true, "adr": true, "task": true,
-	"requirement": true, "service": true, "external-system": true,
+	"requirement": true, "service": true, "external-system": true, "team": true,
 }
 
 func parseKinds(raw string) map[string]bool {
@@ -78,6 +78,7 @@ func kindColor(kind string) string {
 		"requirement":     "#c85c9a",
 		"service":         "#5ba3d4",
 		"external-system": "#d48c3d",
+		"team":            "#3da89a",
 	}
 	if c, ok := colors[kind]; ok {
 		return c
@@ -289,11 +290,29 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 		}
 	}
 
-	// Services as top-level items.
+	// Teams (and their sub-teams and owned services) as top-level items.
+	if activeKinds["team"] {
+		for _, teamID := range sortedIDs(m.Teams) {
+			team := m.Teams[teamID]
+			if team.Parent != "" {
+				continue
+			}
+			teamRows := buildTeamRows(m, teamID, activeKinds, 0)
+			if q != "" && !anyChildMatches(teamRows, q) && !rowMatchesQuery(teamRows[0], q) {
+				continue
+			}
+			rows = append(rows, teamRows...)
+		}
+	}
+
+	// Services as top-level items (unowned by any team).
 	if activeKinds["service"] {
 		svcIDs := sortedIDs(m.Services)
 		for _, svcID := range svcIDs {
 			svc := m.Services[svcID]
+			if svc.Team != "" {
+				continue
+			}
 			svcRow := Row{
 				ID:    string(svcID),
 				Kind:  "service",
@@ -340,6 +359,19 @@ func newRows(m *model.Model, q string, activeKinds map[string]bool) []Row {
 				continue
 			}
 			rows = append(rows, extRow)
+		}
+	}
+
+	// When team is not active but service is, show services owned by teams at top-level.
+	if !activeKinds["team"] {
+		if activeKinds["service"] {
+			for _, svcID := range sortedIDs(m.Services) {
+				svc := m.Services[svcID]
+				if svc.Team == "" {
+					continue
+				}
+				rows = append(rows, Row{ID: string(svcID), Kind: "service", Title: svc.Name, Color: kindColor("service")})
+			}
 		}
 	}
 
@@ -449,4 +481,44 @@ func sortedIDs[K ~string, V any](m map[K]V) []K {
 // StatusColor returns a CSS color for a status value.
 func StatusColor(status string) string {
 	return statusColor(status)
+}
+
+// buildTeamRows recursively builds rows for a team, its sub-teams, and the services
+// it owns. Services are shown without their capability children to avoid deep nesting.
+func buildTeamRows(m *model.Model, teamID model.ID, activeKinds map[string]bool, depth int) []Row {
+	team := m.Teams[teamID]
+	teamRow := Row{
+		ID:    string(teamID),
+		Kind:  "team",
+		Title: team.Name,
+		Color: kindColor("team"),
+		Depth: depth,
+	}
+	var kids []Row
+	for _, subID := range sortedIDs(m.Teams) {
+		sub := m.Teams[subID]
+		if sub.Parent != teamID {
+			continue
+		}
+		kids = append(kids, buildTeamRows(m, subID, activeKinds, depth+1)...)
+	}
+	if activeKinds["service"] {
+		for _, svcID := range sortedIDs(m.Services) {
+			svc := m.Services[svcID]
+			if svc.Team != teamID {
+				continue
+			}
+			kids = append(kids, Row{
+				ID:     string(svcID),
+				Kind:   "service",
+				Title:  svc.Name,
+				Color:  kindColor("service"),
+				Depth:  depth + 1,
+				Parent: string(teamID),
+				Shared: true,
+			})
+		}
+	}
+	teamRow.HasKids = len(kids) > 0
+	return append([]Row{teamRow}, kids...)
 }

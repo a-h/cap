@@ -42,6 +42,7 @@ var fileForKind = map[model.Kind]string{
 	model.KindService:        "service.md",
 	model.KindExternalSystem: "external-system.md",
 	model.KindRequirement:    "requirement.md",
+	model.KindTeam:           "team.md",
 }
 
 // LoadDefault returns the embedded default template for a kind. It reports ok=false

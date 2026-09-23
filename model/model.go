@@ -8,6 +8,7 @@ package model
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -28,6 +29,7 @@ const (
 	KindService        Kind = "service"
 	KindExternalSystem Kind = "external-system"
 	KindRequirement    Kind = "requirement"
+	KindTeam           Kind = "team"
 )
 
 // numberWidth is the zero-padded width of the numeric part of a canonical
@@ -111,12 +113,7 @@ var Statuses = []Status{StatusDraft, StatusProposed, StatusInProgress, StatusDon
 
 // Valid reports whether the status is one of the known values.
 func (s Status) Valid() bool {
-	for _, known := range Statuses {
-		if s == known {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(Statuses, s)
 }
 
 // Context is a bounded context: a boundary within which one model and language
@@ -213,11 +210,20 @@ type Task struct {
 }
 
 // Service is a deployable unit that implements one or more capabilities. A service
-// may span bounded contexts.
+// may span bounded contexts. Team identifies the single team that owns it.
 type Service struct {
 	ID           ID     `json:"id"`
 	Name         string `json:"name"`
+	Team         ID     `json:"team,omitempty"`
 	Capabilities []ID   `json:"capabilities,omitempty"`
+}
+
+// Team is a group of people who own and maintain one or more services. A team may
+// belong to a parent team, allowing arbitrary nesting of teams.
+type Team struct {
+	ID     ID     `json:"id"`
+	Name   string `json:"name"`
+	Parent ID     `json:"parent,omitempty"`
 }
 
 // ExternalSystem is a named third-party or out-of-boundary system that this system
@@ -273,6 +279,8 @@ func (id ID) MapToEntityKind() (kind Kind, ok bool) {
 		return KindExternalSystem, true
 	case "req":
 		return KindRequirement, true
+	case "team":
+		return KindTeam, true
 	}
 	return "", false
 }
@@ -291,6 +299,7 @@ type Model struct {
 	Services        map[ID]Service
 	ExternalSystems map[ID]ExternalSystem
 	Requirements    map[ID]Requirement
+	Teams           map[ID]Team
 }
 
 // NewModel returns a Model with all indexes initialised.
@@ -308,6 +317,7 @@ func NewModel() *Model {
 		Services:        map[ID]Service{},
 		ExternalSystems: map[ID]ExternalSystem{},
 		Requirements:    map[ID]Requirement{},
+		Teams:           map[ID]Team{},
 	}
 }
 
@@ -349,6 +359,9 @@ func (m *Model) Lookup(id ID) (kind Kind, ok bool) {
 	}
 	if _, ok := m.Requirements[id]; ok {
 		return KindRequirement, true
+	}
+	if _, ok := m.Teams[id]; ok {
+		return KindTeam, true
 	}
 	return "", false
 }

@@ -11,20 +11,7 @@ themeSelect.addEventListener('change', function() { applyTheme(themeSelect.value
 applyTheme(localStorage.getItem('cap-theme') || 'cap');
 
 // ── Kind chips ─────────────────────────────────────────────────────────────
-const KIND_COLORS = {
-	context:           '#4a7fd4',
-	capability:        '#3daa6e',
-	concept:           '#d4a535',
-	invariant:         '#e05c5c',
-	scenario:          '#9a6dd4',
-	specification:     '#3db8c8',
-	verification:      '#7aad4a',
-	adr:               '#c07840',
-	task:              '#888888',
-	requirement:       '#c85c9a',
-	service:           '#5ba3d4',
-	'external-system': '#d48c3d',
-};
+const KIND_COLORS = JSON.parse(document.getElementById('cap-kind-defs').textContent);
 const STATUS_COLORS = {
 	done:          '#3daa6e',
 	'in-progress': '#5b8af5',

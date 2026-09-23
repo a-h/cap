@@ -71,6 +71,7 @@ var DirForKind = map[model.Kind]string{
 	model.KindService:        "services",
 	model.KindExternalSystem: "external-systems",
 	model.KindRequirement:    "requirements",
+	model.KindTeam:           "teams",
 }
 
 // idFromFilename matches an identifier at the start of a filename. The canonical

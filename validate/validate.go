@@ -333,7 +333,15 @@ func collectReferences(m *model.Model) []reference {
 		add(j.ID, store.SectionCapabilities, model.KindCapability, j.Capabilities)
 	}
 	for _, s := range m.Services {
+		if s.Team != "" {
+			refs = append(refs, reference{source: s.ID, section: store.SectionMetadata, target: s.Team, want: []model.Kind{model.KindTeam}})
+		}
 		add(s.ID, store.SectionCapabilities, model.KindCapability, s.Capabilities)
+	}
+	for _, t := range m.Teams {
+		if t.Parent != "" {
+			refs = append(refs, reference{source: t.ID, section: store.SectionMetadata, target: t.Parent, want: []model.Kind{model.KindTeam}})
+		}
 	}
 	for _, r := range m.Requirements {
 		add(r.ID, store.SectionCapabilities, model.KindCapability, r.Capabilities)

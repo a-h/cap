@@ -8,24 +8,23 @@ package root
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-type kindDef struct {
-	Name  string
-	Color string
-}
-
-var kindDefs = []kindDef{
-	{Name: "context", Color: "#4a7fd4"},
-	{Name: "capability", Color: "#3daa6e"},
-	{Name: "concept", Color: "#d4a535"},
-	{Name: "invariant", Color: "#e05c5c"},
-	{Name: "scenario", Color: "#9a6dd4"},
-	{Name: "specification", Color: "#3db8c8"},
-	{Name: "verification", Color: "#7aad4a"},
-	{Name: "adr", Color: "#c07840"},
-	{Name: "task", Color: "#888888"},
-	{Name: "requirement", Color: "#c85c9a"},
-	{Name: "service", Color: "#5ba3d4"},
-	{Name: "external-system", Color: "#d48c3d"},
+// kindDefs maps each entity kind name to its display color. It is the single
+// source of truth: templ.JSONScript embeds it in the page so app.js can read it
+// without duplicating the data.
+var kindDefs = map[string]string{
+	"context":         "#4a7fd4",
+	"capability":      "#3daa6e",
+	"concept":         "#d4a535",
+	"invariant":       "#e05c5c",
+	"scenario":        "#9a6dd4",
+	"specification":   "#3db8c8",
+	"verification":    "#7aad4a",
+	"adr":             "#c07840",
+	"task":            "#888888",
+	"requirement":     "#c85c9a",
+	"service":         "#5ba3d4",
+	"external-system": "#d48c3d",
+	"team":            "#3da89a",
 }
 
 func Layout() templ.Component {
@@ -49,7 +48,15 @@ func Layout() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>cap — system documentation explorer</title><link rel=\"stylesheet\" href=\"/static/vendor/vs/editor/editor.main.css\"><link rel=\"stylesheet\" href=\"/static/app.css\"><script src=\"/static/vendor/htmx.min.js\"></script><script src=\"/static/vendor/d3.v7.min.js\"></script><script src=\"/static/vendor/vs/loader.js\"></script></head><body><div id=\"app\"><div id=\"header\"><span id=\"app-name\">cap</span> <input type=\"search\" id=\"search\" name=\"q\" placeholder=\"Search…\" autocomplete=\"off\" hx-get=\"/tree\" hx-trigger=\"input changed delay:300ms\" hx-target=\"#tree-body\" hx-include=\"#search,#kind-state\"> <input type=\"hidden\" id=\"kind-state\" name=\"kinds\"><div id=\"chips\"></div><select id=\"theme-select\"><option value=\"cap\">Cap</option> <option value=\"dracula\">Dracula</option> <option value=\"one-dark\">One Dark</option> <option value=\"nord\">Nord</option> <option value=\"catppuccin\">Catppuccin</option> <option value=\"github-dark\">GitHub Dark</option></select></div><div id=\"main\"><div id=\"tree-panel\"><div id=\"tree-head\"><div class=\"th\">Entity</div><div class=\"th\">Kind</div><div class=\"th\">ID</div><div class=\"th\">Status</div></div><div id=\"tree-body\" hx-get=\"/tree\" hx-trigger=\"load, kindchange from:body\" hx-include=\"#kind-state,#search\" hx-swap=\"innerHTML\"></div></div><div id=\"graph-panel\"><div id=\"panel-tabs\"><button class=\"ptab\" id=\"tab-graph\" data-tab=\"graph\">Graph</button> <button class=\"ptab\" id=\"tab-table\" data-tab=\"table\">Table</button></div><div id=\"graph-view\"><svg id=\"graph-svg\"></svg><div id=\"graph-btns\"><button class=\"gbtn\" id=\"btn-fit\">Fit</button> <button class=\"gbtn\" id=\"btn-rst\">Reset</button> <button class=\"gbtn\" id=\"btn-svg\">SVG</button> <button class=\"gbtn\" id=\"btn-png\">PNG</button></div></div><div id=\"table-view\"><div id=\"table-controls\"><div class=\"tctrl-row\"><span class=\"tctrl-label\">From</span><div id=\"from-chips\" class=\"tctrl-chips\"></div><input type=\"hidden\" id=\"from-kind\" name=\"from\" value=\"requirement\"></div><div class=\"tctrl-row\"><span class=\"tctrl-label\">To</span><div id=\"to-chips\" class=\"tctrl-chips\"></div><input type=\"hidden\" id=\"to-kind\" name=\"to\" value=\"capability\"></div></div><div id=\"table-body\" hx-get=\"/table\" hx-trigger=\"load, tablechange from:body\" hx-include=\"#from-kind,#to-kind\" hx-swap=\"innerHTML\"></div><div id=\"table-btns\"><button class=\"gbtn\" id=\"btn-copy-table\">Copy</button></div></div></div><div id=\"detail-panel\"></div></div></div><script src=\"/static/app.js\"></script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>cap — system documentation explorer</title><link rel=\"stylesheet\" href=\"/static/vendor/vs/editor/editor.main.css\"><link rel=\"stylesheet\" href=\"/static/app.css\"><script src=\"/static/vendor/htmx.min.js\"></script><script src=\"/static/vendor/d3.v7.min.js\"></script><script src=\"/static/vendor/vs/loader.js\"></script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templ.JSONScript("cap-kind-defs", kindDefs).Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</head><body><div id=\"app\"><div id=\"header\"><span id=\"app-name\">cap</span> <input type=\"search\" id=\"search\" name=\"q\" placeholder=\"Search…\" autocomplete=\"off\" hx-get=\"/tree\" hx-trigger=\"input changed delay:300ms\" hx-target=\"#tree-body\" hx-include=\"#search,#kind-state\"> <input type=\"hidden\" id=\"kind-state\" name=\"kinds\"><div id=\"chips\"></div><select id=\"theme-select\"><option value=\"cap\">Cap</option> <option value=\"dracula\">Dracula</option> <option value=\"one-dark\">One Dark</option> <option value=\"nord\">Nord</option> <option value=\"catppuccin\">Catppuccin</option> <option value=\"github-dark\">GitHub Dark</option></select></div><div id=\"main\"><div id=\"tree-panel\"><div id=\"tree-head\"><div class=\"th\">Entity</div><div class=\"th\">Kind</div><div class=\"th\">ID</div><div class=\"th\">Status</div></div><div id=\"tree-body\" hx-get=\"/tree\" hx-trigger=\"load, kindchange from:body\" hx-include=\"#kind-state,#search\" hx-swap=\"innerHTML\"></div></div><div id=\"graph-panel\"><div id=\"panel-tabs\"><button class=\"ptab\" id=\"tab-graph\" data-tab=\"graph\">Graph</button> <button class=\"ptab\" id=\"tab-table\" data-tab=\"table\">Table</button></div><div id=\"graph-view\"><svg id=\"graph-svg\"></svg><div id=\"graph-btns\"><button class=\"gbtn\" id=\"btn-fit\">Fit</button> <button class=\"gbtn\" id=\"btn-rst\">Reset</button> <button class=\"gbtn\" id=\"btn-svg\">SVG</button> <button class=\"gbtn\" id=\"btn-png\">PNG</button></div></div><div id=\"table-view\"><div id=\"table-controls\"><div class=\"tctrl-row\"><span class=\"tctrl-label\">From</span><div id=\"from-chips\" class=\"tctrl-chips\"></div><input type=\"hidden\" id=\"from-kind\" name=\"from\" value=\"requirement\"></div><div class=\"tctrl-row\"><span class=\"tctrl-label\">To</span><div id=\"to-chips\" class=\"tctrl-chips\"></div><input type=\"hidden\" id=\"to-kind\" name=\"to\" value=\"capability\"></div></div><div id=\"table-body\" hx-get=\"/table\" hx-trigger=\"load, tablechange from:body\" hx-include=\"#from-kind,#to-kind\" hx-swap=\"innerHTML\"></div><div id=\"table-btns\"><button class=\"gbtn\" id=\"btn-copy-table\">Copy</button></div></div></div><div id=\"detail-panel\"></div></div></div><script src=\"/static/app.js\"></script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

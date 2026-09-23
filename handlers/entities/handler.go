@@ -189,8 +189,16 @@ func buildEdges(m *model.Model) edgeIndex {
 		}
 	}
 	for _, svc := range m.Services {
+		if svc.Team != "" {
+			idx.add(svc.Team, svc.ID)
+		}
 		for _, id := range svc.Capabilities {
 			idx.add(svc.ID, id)
+		}
+	}
+	for _, team := range m.Teams {
+		if team.Parent != "" {
+			idx.add(team.Parent, team.ID)
 		}
 	}
 	return idx
@@ -233,6 +241,9 @@ func lookupEntity(m *model.Model, id model.ID) (kind, title, status string) {
 	if e, ok := m.ExternalSystems[id]; ok {
 		return "external-system", e.Name, ""
 	}
+	if e, ok := m.Teams[id]; ok {
+		return "team", e.Name, ""
+	}
 	return "", "", ""
 }
 
@@ -266,6 +277,7 @@ func kindColor(kind string) string {
 		"requirement":     "#c85c9a",
 		"service":         "#5ba3d4",
 		"external-system": "#d48c3d",
+		"team":            "#3da89a",
 	}
 	if c, ok := colors[kind]; ok {
 		return c

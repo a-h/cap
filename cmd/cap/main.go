@@ -89,6 +89,7 @@ var kindAliases = map[string]model.Kind{
 	"service": model.KindService, "services": model.KindService, "svc": model.KindService,
 	"external-system": model.KindExternalSystem, "external-systems": model.KindExternalSystem, "ext": model.KindExternalSystem,
 	"requirement": model.KindRequirement, "requirements": model.KindRequirement, "req": model.KindRequirement,
+	"team": model.KindTeam, "teams": model.KindTeam,
 }
 
 // resolveKind maps a user-supplied kind name or alias to an entity kind.

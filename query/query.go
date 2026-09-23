@@ -59,6 +59,9 @@ func Title(m *model.Model, id model.ID) string {
 	if r, ok := m.Requirements[id]; ok {
 		return r.Title
 	}
+	if t, ok := m.Teams[id]; ok {
+		return t.Name
+	}
 	return ""
 }
 
@@ -115,6 +118,10 @@ func List(m *model.Model, kind model.Kind) []Entry {
 		for id, r := range m.Requirements {
 			entries = append(entries, Entry{ID: id, Title: r.Title})
 		}
+	case model.KindTeam:
+		for id, t := range m.Teams {
+			entries = append(entries, Entry{ID: id, Title: t.Name})
+		}
 	}
 	sort.Slice(entries, func(i, j int) bool { return entries[i].ID < entries[j].ID })
 	return entries
@@ -146,6 +153,9 @@ func Children(m *model.Model, id model.ID) []model.ID {
 	}
 	if s, ok := m.Services[id]; ok {
 		return s.Capabilities
+	}
+	if _, ok := m.Teams[id]; ok {
+		return append(getSubTeams(m, id), getServicesOwnedByTeam(m, id)...)
 	}
 	if r, ok := m.Requirements[id]; ok {
 		return dedupe(append(append([]model.ID(nil), r.Capabilities...), getCapabilitiesNamingRequirement(m, id)...))
@@ -192,6 +202,16 @@ func Parents(m *model.Model, id model.ID) []model.ID {
 	for sid, s := range m.Services {
 		if slices.Contains(s.Capabilities, id) {
 			add(sid)
+		}
+	}
+	if s, ok := m.Services[id]; ok {
+		if s.Team != "" {
+			add(s.Team)
+		}
+	}
+	if t, ok := m.Teams[id]; ok {
+		if t.Parent != "" {
+			add(t.Parent)
 		}
 	}
 	for rid, r := range m.Requirements {
@@ -303,6 +323,32 @@ func getCapabilitiesNamingRequirement(m *model.Model, requirement model.ID) []mo
 	var out []model.ID
 	for id, c := range m.Capabilities {
 		if slices.Contains(c.Requirements, requirement) {
+			out = append(out, id)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// getSubTeams returns the identifiers of teams whose Parent is the given team, ordered
+// by identifier.
+func getSubTeams(m *model.Model, parent model.ID) []model.ID {
+	var out []model.ID
+	for id, t := range m.Teams {
+		if t.Parent == parent {
+			out = append(out, id)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	return out
+}
+
+// getServicesOwnedByTeam returns the identifiers of services whose Team is the given
+// team, ordered by identifier.
+func getServicesOwnedByTeam(m *model.Model, team model.ID) []model.ID {
+	var out []model.ID
+	for id, s := range m.Services {
+		if s.Team == team {
 			out = append(out, id)
 		}
 	}

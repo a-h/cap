@@ -91,6 +91,12 @@ func buildChecklist(kind model.Kind) []string {
 			"Does the Description state how this service is deployed and what role it plays in the system?",
 			"Are the capabilities listed all implemented by this service, not capabilities this service merely calls?",
 		}, common...)
+	case model.KindTeam:
+		return append([]string{
+			"Does the team own a coherent set of services, with a clear area of responsibility?",
+			"Is each service owned by exactly one team?",
+			"If this team has a parent team, does the relationship make sense? A team should belong to a broader grouping that shares related ownership.",
+		}, common...)
 	case model.KindExternalSystem:
 		return append([]string{
 			"Is this genuinely an external system, outside the control and deployment of this project?",

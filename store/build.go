@@ -34,7 +34,9 @@ func (res *LoadResult) build(kind model.Kind, id model.ID, file string, doc mark
 	case model.KindTask:
 		m.Tasks[id] = model.Task{ID: id, Title: doc.Title, Status: res.parseStatus(file, meta)}
 	case model.KindService:
-		m.Services[id] = model.Service{ID: id, Name: doc.Title, Capabilities: res.parseReferences(file, doc, SectionCapabilities)}
+		m.Services[id] = model.Service{ID: id, Name: doc.Title, Team: parseMetaID(meta, "team"), Capabilities: res.parseReferences(file, doc, SectionCapabilities)}
+	case model.KindTeam:
+		m.Teams[id] = model.Team{ID: id, Name: doc.Title, Parent: parseMetaID(meta, "parent")}
 	case model.KindExternalSystem:
 		m.ExternalSystems[id] = model.ExternalSystem{ID: id, Name: doc.Title}
 	case model.KindRequirement:
