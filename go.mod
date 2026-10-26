@@ -9,7 +9,7 @@ require (
 
 require (
 	github.com/a-h/templ v0.3.1020
-	github.com/wailsapp/wails/v2 v2.15.0
+	github.com/wailsapp/wails/v2 v2.16.0
 )
 
 require (
